@@ -1,0 +1,95 @@
+##################
+### PARAMETERS ###
+##################
+
+# GLOBAL
+PI_NAMES="Katja Metfies"
+PROJECT_NAME="full_FRAM_and_beyond"
+TARGET_MOLECULE="18S"
+TARGET_REGION="v4"
+THREADS="15"
+#[1:max#cores]
+DEBUG="YES"
+#[YES NO]; NO removes intermediate sequence files if not used anymore
+
+# REFERENCE SETTINGS
+REF_RAW_PATH="/scratch2/db/q_zip_dbs/"
+REF_DBS="silva_ref_v128_full_Euk pr2_gb203_v4_5"
+#[silva_ref_v128_full_Euk silva_nr_v123_1_full_Euk pr2_gb203_v4_5]
+# mothur issue: please only use AlNum [A-Z,a-z,0-9] and underscore "_" in names for ref_dbs 
+# (e. g. silva_nr_v128_full_Euk silva_nr_v123_1_full_Euk pr2_gb203_v4_5)
+ILLUMINACLIP_FP="../../bin/Trimmomatic-0.35/adapters/NexteraPE-PE.fa"
+
+# BINARY LOCATIONS
+CUTADAPT="../../bin/cutadapt"
+TRIMMOMATIC="../../bin/trimmomatic"
+VSEARCH="../../bin/vsearch"
+SWARM="../../bin/swarm"
+MOTHUR="../../bin/mothur"
+FASTQC="../../bin/fastqc"
+PEAR="../../bin/pear"
+
+# DIRECTORY SETTINGS
+REF_USED_FP="./refDB/"
+LOG_FP="./logs/"
+RESULTS_DIR="./results"
+
+# OLIGOS
+FORWARDPRIMER="GCGGTAATTCCAGCTCCAA"
+REVERSEPRIMER="GGCAAATGCTTTCGCA"
+#"GGCAAATGCTTTCGCA" #"ACTTTCGTTCTTGAT"
+
+# CUTADAPT FILTER (REFERENCE SEQS AND QUERIES)
+PRIMER_MISMATCH="0.25"
+MIN_PRIMER_OVERLAP_FRAC="7/10"
+# value as fraction
+
+# TRIMMOMATIC
+ILLUMINACLIP_PATTERN="2:30:10:3:TRUE"
+SLIDINGWINDOW="4:8"
+
+# VSEARCH merge/assemble paired-ends
+#FASTQ_MAXDIFFS="3"
+#FASTQ_MINOVLEN="10"
+
+# PEAR merge/assemble paired-ends
+FASTQ_MINOVLEN="10"
+
+# VSEARCH filter
+FASTQ_MAXEE="1"
+#feature filter
+#FASTQ_MAXLEN="420" #FASTQ_MAXLEN = AVGLEN + AVGLENRADIUS #feature filter
+#FASTQ_MINLEN="320" #FASTQ_MINLEN = AVGLEN - AVGLENRADIUS #feature filter
+AVGLENRADIUS="50"
+#feature filter; used to define FASTQ_MAXLEN and FASTQ_MINLEN as AVGLENRADIUS-distant from sample average sequence length
+FASTQ_MAXNS="0"
+#feature filter
+
+# Min sample size filter to feed swarm
+MIN_SAMPLE_SIZE=10000
+
+## SUBSAMPLING FOR FASTQC REPORTS
+# not yet implemented
+#FASTQC_SUB="10" #subsample fastqs for fastqc reports to reduce computation effort
+
+## SWARMING
+DISTANCE="1"
+F_BOUNDARY="2"
+#2 means: only for singletons it will be tried to graft them onto more abundant cluster
+S_STRUCT="swarm.struct"
+S_STATS="swarm.stats"
+S_SEEDS="swarm.seeds"
+S_SWARM="swarm.swarm"
+
+## CLUSTER SIZE CUTOFF
+#disabled
+#always removal of singletons
+
+## MOTHUR TAXONOMIC ASSIGNMENT
+RDP_CUTOFF="90"
+
+## RESULTS
+OTU_TABLE="OTU_table.csv"
+AMPLICON_TABLE="amplicon_table.csv"
+
+
