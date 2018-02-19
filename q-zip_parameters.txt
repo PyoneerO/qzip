@@ -3,31 +3,30 @@
 ##################
 
 # GLOBAL
-PI_NAMES="Katja Metfies"
-PROJECT_NAME="full_FRAM_and_beyond"
-TARGET_MOLECULE="18S"
-TARGET_REGION="v4"
-THREADS="15"
+PI_NAMES=""
+PROJECT_NAME=""
+TARGET_MOLECULE=""
+TARGET_REGION=""
+THREADS="30"
 #[1:max#cores]
 DEBUG="YES"
 #[YES NO]; NO removes intermediate sequence files if not used anymore
 
 # REFERENCE SETTINGS
 REF_RAW_PATH="/scratch2/db/q_zip_dbs/"
-REF_DBS="silva_ref_v128_full_Euk pr2_gb203_v4_5"
-#[silva_ref_v128_full_Euk silva_nr_v123_1_full_Euk pr2_gb203_v4_5]
+REF_DBS="nifH_arb_2014"
+#[silva_ref_v128_full_Euk silva_nr_v128_full_Euk silva_nr_v123_1_full_Euk pr2_gb203_v4_5 silva_nr_v128_full_Pros nifH_arb_2014]
 # mothur issue: please only use AlNum [A-Z,a-z,0-9] and underscore "_" in names for ref_dbs 
-# (e. g. silva_nr_v128_full_Euk silva_nr_v123_1_full_Euk pr2_gb203_v4_5)
-ILLUMINACLIP_FP="../../bin/Trimmomatic-0.35/adapters/NexteraPE-PE.fa"
+ILLUMINACLIP_FP="/scratch2/sneuhaus/bin/Trimmomatic-0.35/adapters/NexteraPE-PE.fa"
 
 # BINARY LOCATIONS
-CUTADAPT="../../bin/cutadapt"
-TRIMMOMATIC="../../bin/trimmomatic"
-VSEARCH="../../bin/vsearch"
-SWARM="../../bin/swarm"
-MOTHUR="../../bin/mothur"
-FASTQC="../../bin/fastqc"
-PEAR="../../bin/pear"
+CUTADAPT="/scratch2/sneuhaus/bin/cutadapt"
+TRIMMOMATIC="/scratch2/sneuhaus/bin/trimmomatic"
+VSEARCH="/scratch2/sneuhaus/bin/vsearch"
+SWARM="/scratch2/sneuhaus/bin/swarm"
+MOTHUR="/scratch2/sneuhaus/bin/mothur"
+FASTQC="/scratch2/sneuhaus/bin/fastqc"
+PEAR="/scratch2/sneuhaus/bin/pear"
 
 # DIRECTORY SETTINGS
 REF_USED_FP="./refDB/"
@@ -35,38 +34,37 @@ LOG_FP="./logs/"
 RESULTS_DIR="./results"
 
 # OLIGOS
-FORWARDPRIMER="GCGGTAATTCCAGCTCCAA"
-REVERSEPRIMER="GGCAAATGCTTTCGCA"
-#"GGCAAATGCTTTCGCA" #"ACTTTCGTTCTTGAT"
+FORWARDPRIMER="TGYGAYCCNAARGCNGA"
+REVERSEPRIMER="ADNGCCATCATYTCNCC"
 
 # CUTADAPT FILTER (REFERENCE SEQS AND QUERIES)
 PRIMER_MISMATCH="0.25"
-MIN_PRIMER_OVERLAP_FRAC="7/10"
+MIN_PRIMER_OVERLAP_FRAC="8/10"
 # value as fraction
 
 # TRIMMOMATIC
 ILLUMINACLIP_PATTERN="2:30:10:3:TRUE"
-SLIDINGWINDOW="4:8"
+SLIDINGWINDOW="3:8"
 
 # VSEARCH merge/assemble paired-ends
-#FASTQ_MAXDIFFS="3"
-#FASTQ_MINOVLEN="10"
+#FASTQ_MAXDIFFS="5"
+#FASTQ_MINOVLEN="50"
 
 # PEAR merge/assemble paired-ends
-FASTQ_MINOVLEN="10"
+FASTQ_MINOVLEN="20"
 
 # VSEARCH filter
 FASTQ_MAXEE="1"
 #feature filter
-#FASTQ_MAXLEN="420" #FASTQ_MAXLEN = AVGLEN + AVGLENRADIUS #feature filter
-#FASTQ_MINLEN="320" #FASTQ_MINLEN = AVGLEN - AVGLENRADIUS #feature filter
-AVGLENRADIUS="50"
+FASTQ_MAXLEN="600" #FASTQ_MAXLEN = AVGLEN + AVGLENRADIUS #feature filter
+FASTQ_MINLEN="1" #FASTQ_MINLEN = AVGLEN - AVGLENRADIUS #feature filter
+#AVGLENRADIUS="50" #use this setting only if you do not expect high variation of target length
 #feature filter; used to define FASTQ_MAXLEN and FASTQ_MINLEN as AVGLENRADIUS-distant from sample average sequence length
 FASTQ_MAXNS="0"
 #feature filter
 
 # Min sample size filter to feed swarm
-MIN_SAMPLE_SIZE=10000
+MIN_SAMPLE_SIZE=5000
 
 ## SUBSAMPLING FOR FASTQC REPORTS
 # not yet implemented
@@ -86,7 +84,7 @@ S_SWARM="swarm.swarm"
 #always removal of singletons
 
 ## MOTHUR TAXONOMIC ASSIGNMENT
-RDP_CUTOFF="90"
+RDP_CUTOFF="80"
 
 ## RESULTS
 OTU_TABLE="OTU_table.csv"
