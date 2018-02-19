@@ -106,16 +106,16 @@ cat ${PROJECT_ID}*".map" | cut -f2 | parallel -j ${THREADS} -k "if [ -s {} ]; th
 cut -f 1 ${PROJECT_ID}".map" |  grep -v "^#" |tr "." "_" | parallel -j ${THREADS} ${TRIMMOMATIC}" PE -phred33 {}_L001_R1_001.fastq* {}_L001_R2_001.fastq* {.}.trimmed.R1 waste {.}.trimmed.R2 waste ILLUMINACLIP:"${ILLUMINACLIP_FP}":"${ILLUMINACLIP_PATTERN}" SLIDINGWINDOW:"${SLIDINGWINDOW}
 rm -rf waste
 ## GET SEQ NUMBER AFTER TRIMMING
-cat ${PROJECT_ID}*".map" | while read a b c ; do if [ -s $a*.trimmed.R1 ]; then grep -c "^+$" $a*trimmed.R1; else echo "0"; fi;done >> seq_number_stats.interm
+cat ${PROJECT_ID}*".map" | while read a b c ; do if [ -s $a.trimmed.R1 ]; then grep -c "^+$" $a.trimmed.R1; else echo "0"; fi;done >> seq_number_stats.interm
 
 
 ## MERGE PAIRED ENDS
-#ls -S1 . | grep "trimmed.R1" | parallel -j ${THREADS} ${VSEARCH}" --fastq_mergepairs {} --reverse {.}'.R2' --threads 1 --fasta_width 0 --fastq_maxdiffs "${FASTQ_MAXDIFFS}" --fastq_minovlen "${FASTQ_MINOVLEN}" --fastqout {.}.assembled.fastq"
+#ls -S1 . | grep "trimmed.R1" | parallel -j ${THREADS} ${VSEARCH}" --fastq_mergepairs {} --reverse {.}'.R2' --threads 1 --fasta_width 0 --fastq_allowmergestagger --fastq_maxdiffs "${FASTQ_MAXDIFFS}" --fastq_minovlen "${FASTQ_MINOVLEN}" --fastqout {.}.assembled.fastq"
 ls -S1 . | grep "trimmed.R1" | parallel -j ${THREADS} ${PEAR}" --forward-fastq {} --reverse-fastq {.}'.R2' --threads 1 --memory 10000000000 --min-overlap "${FASTQ_MINOVLEN}" --output {.}"
 ## REMOVE NOT NEEDED INTERMEDIATE FILES
 if [ ${DEBUG} == "NO" ]; then rm *trimmed.R1 *trimmed.R2; fi
 ## GET SEQ NUMBER AFTER MERGING/ASSEMBLING
-cat ${PROJECT_ID}*".map" | while read a b c ; do if [ -s $a*.assembled.fastq ]; then grep -c "^+$" $a*.assembled.fastq; else echo "0"; fi;done >> seq_number_stats.interm
+cat ${PROJECT_ID}*".map" | while read a b c ; do if [ -s $a.trimmed.assembled.fastq ]; then grep -c "^+$" $a.trimmed.assembled.fastq; else echo "0"; fi;done >> seq_number_stats.interm
 
 ## CREATE REVERSE COMPLEMENTED SEQUENCES
 ls -S1 . | grep ".assembled.fastq" | parallel -j ${THREADS} ${VSEARCH}" --fastx_revcomp {} --threads 1 --fastq_ascii 33 --fasta_width 0 --fastqout {.}.revcomp.fastq"
@@ -132,13 +132,16 @@ ${CUTADAPT}" -a "${REVERSEPRIMER_RC}" -e "${PRIMER_MISMATCH}" -O "${lenRP_CUT}" 
 ## REMOVE NOT NEEDED INTERMEDIATE FILES
 if [ ${DEBUG} == "NO" ]; then rm *bothdir_concat.fastq; fi
 ## GET SEQ NUMBER AFTER PRIMER FILTERING
-cat ${PROJECT_ID}*".map" | while read a b c ; do if [ -s $a*.primer_cut.fastq ]; then grep -c "^+$" $a*.primer_cut.fastq; else echo "0"; fi;done >> seq_number_stats.interm
+cat ${PROJECT_ID}*".map" | while read a b c ; do if [ -s $a.trimmed.assembled.bothdir_concat.primer_cut.fastq ]; then grep -c "^+$" $a.trimmed.assembled.bothdir_concat.primer_cut.fastq; else echo "0"; fi;done >> seq_number_stats.interm
 
 
 ## CALCULATE AVG LENGTH AND DEPENDING MINLEN / MAXLEN FOR FEATURE FILTER
 AVGLEN=`awk 'NR%4==2 {print length($0)}' *primer_cut.fastq | awk 'BEGIN{leng=0}{leng+=$0}END{print(leng/NR)}'`
-FASTQ_MINLEN=`echo $AVGLEN - $AVGLENRADIUS | bc | cut -d"." -f1`
-FASTQ_MAXLEN=`echo $AVGLEN + $AVGLENRADIUS | bc | cut -d"." -f1`
+echo $AVGLEN
+#FASTQ_MINLEN=`echo $AVGLEN - $AVGLENRADIUS | bc | cut -d"." -f1`
+echo $FASTQ_MINLEN
+#FASTQ_MAXLEN=`echo $AVGLEN + $AVGLENRADIUS | bc | cut -d"." -f1`
+echo $FASTQ_MAXLEN
 ## FEATURE FILTERING AND SHA1-RELABELing
 ls -S1 | grep "primer_cut.fastq" | parallel -j ${THREADS} \
 "${VSEARCH} --threads 1 --fastq_ascii 33 --fasta_width 0 --fastx_filter {} \
@@ -147,7 +150,7 @@ ls -S1 | grep "primer_cut.fastq" | parallel -j ${THREADS} \
 ## REMOVE NOT NEEDED INTERMEDIATE FILES
 if [ ${DEBUG} == "NO" ]; then rm *primer_cut.fastq; fi
 ## GET SEQ NUMBER AFTER FEATURE FILTERING
-cat ${PROJECT_ID}*".map" | while read a b c ; do if [ -s $a*.feature_filtered.fastq ]; then grep -c "^+$" $a*.feature_filtered.fastq; else echo "0"; fi;done >> seq_number_stats.interm
+cat ${PROJECT_ID}*".map" | while read a b c ; do if [ -s $a.trimmed.assembled.bothdir_concat.primer_cut.feature_filtered.fastq ]; then grep -c "^+$" $a.trimmed.assembled.bothdir_concat.primer_cut.feature_filtered.fastq; else echo "0"; fi;done >> seq_number_stats.interm
 
 ### MAKE FASTQC REPORTS
 ## subsample feature_filtered seqs (FASTQC_SUB)
@@ -163,7 +166,7 @@ cat ${PROJECT_ID}*".map" | while read a b c ; do if [ -s $a*.feature_filtered.fa
 ## DEREPLICATION ON SAMPLE LEVEL
 ls -S1 | grep "feature_filtered.fastq" | parallel -j ${THREADS} ${VSEARCH}" --derep_fulllength {} --threads 1 --fasta_width 0 --relabel_sha1 --sizeout --output {.}.derep.fasta"
 ## GET SEQ NUMBER AFTER DEREPLICATION
-cat ${PROJECT_ID}*".map" | while read a b c ; do if [ -s $a*.derep.fasta ]; then grep -c "^>" $a*.derep.fasta; else echo "0"; fi;done >> seq_number_stats.interm
+cat ${PROJECT_ID}*".map" | while read a b c ; do if [ -s $a.trimmed.assembled.bothdir_concat.primer_cut.feature_filtered.derep.fasta ]; then grep -c "^>" $a.trimmed.assembled.bothdir_concat.primer_cut.feature_filtered.derep.fasta; else echo "0"; fi;done >> seq_number_stats.interm
 ## REMOVE NOT NEEDED INTERMEDIATE FILES
 if [ ${DEBUG} == "NO" ]; then rm *feature_filtered.fastq; fi
 
@@ -172,13 +175,13 @@ ls -1S | grep "derep.fasta" | parallel -j ${THREADS} ${VSEARCH}" --fasta_width 0
 ## REMOVE NOT NEEDED INTERMEDIATE FILES
 if [ ${DEBUG} == "NO" ]; then rm *derep.fasta; rm *derep.chimeras_denovo.fasta; fi
 # GET SEQ NUMBER AFTER CHIMERA REMOVAL
-cat ${PROJECT_ID}*".map" | while read a b c ; do if [ -s $a*.non_chimeras_denovo.fasta ]; then grep -c "^>" $a*.non_chimeras_denovo.fasta; else echo "0"; fi;done >> seq_number_stats.interm
+cat ${PROJECT_ID}*".map" | while read a b c ; do if [ -s $a.trimmed.assembled.bothdir_concat.primer_cut.feature_filtered.derep.non_chimeras_denovo.fasta ]; then grep -c "^>" $a.trimmed.assembled.bothdir_concat.primer_cut.feature_filtered.derep.non_chimeras_denovo.fasta; else echo "0"; fi;done >> seq_number_stats.interm
 # GET SEQ NUMBER AFTER CHIMERA REMOVAL, IF REREPLICATED (added abundance of each unified/dereplicated sequence)
-cat ${PROJECT_ID}*".map" | while read a b c ; do if [ -s $a*.non_chimeras_denovo.fasta ]; \
-then awk -F "[;=]" 'BEGIN{cnt=0}{cnt+=$3}END{print cnt}' $a*.non_chimeras_denovo.fasta ; else echo "0"; fi;done >> seq_number_stats.interm
+cat ${PROJECT_ID}*".map" | while read a b c ; do if [ -s $a.trimmed.assembled.bothdir_concat.primer_cut.feature_filtered.derep.non_chimeras_denovo.fasta ]; \
+then awk -F "[;=]" 'BEGIN{cnt=0}{cnt+=$3}END{print cnt}' $a.trimmed.assembled.bothdir_concat.primer_cut.feature_filtered.derep.non_chimeras_denovo.fasta ; else echo "0"; fi;done >> seq_number_stats.interm
 # GET AVERAGE LENGTH OF USED SEQUENCES (...non_chimeras_denovo.fasta)
-cat ${PROJECT_ID}*".map" | while read a b c ; do if [ -s $a*.non_chimeras_denovo.fasta ]; then \
-awk '{gsub(";size=","_"); gsub(/;$/,""); print}' $a*.non_chimeras_denovo.fasta | \
+cat ${PROJECT_ID}*".map" | while read a b c ; do if [ -s $a.trimmed.assembled.bothdir_concat.primer_cut.feature_filtered.derep.non_chimeras_denovo.fasta ]; then \
+awk '{gsub(";size=","_"); gsub(/;$/,""); print}' $a.trimmed.assembled.bothdir_concat.primer_cut.feature_filtered.derep.non_chimeras_denovo.fasta | \
 awk -F"_" 'BEGIN{seqnr=0}NR%2==1{seqnr=$2;getline; print(seqnr*length($0), seqnr)}' | \
 awk 'BEGIN{leng=0;seqnr=0}{leng+=$1;seqnr+=$2}END{print(leng/seqnr)}'; else echo "-"; fi;done >> seq_number_stats.interm
 
