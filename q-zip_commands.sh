@@ -21,11 +21,12 @@ echo "Load options from q-zip_parameters.txt"
 sleep 1
 . ./q-zip_parameters.txt
 cat q-zip_parameters.txt
-sleep 2
 
 ### GET DEPENDING PARAMETER, DO NOT CHANGE
 PROJECT_ID=${PROJECT_NAME}"_"${ST_DATE}_${ST_TIME}
 REVERSEPRIMER_RC=`echo ${REVERSEPRIMER} | tr "[ATGCatgcRYSWKMBDHVryswkmbdhv]" "[TACGtacgYRSWMKVHDByrswmkvhdb]" | rev`
+lenFP_CUT_REF=$(( ${#FORWARDPRIMER} * ${MIN_PRIMER_OVERLAP_FRAC_REF} ))
+lenRP_CUT_REF=$(( ${#REVERSEPRIMER_RC} * ${MIN_PRIMER_OVERLAP_FRAC_REF} ))
 lenFP_CUT=$(( ${#FORWARDPRIMER} * ${MIN_PRIMER_OVERLAP_FRAC} ))
 lenRP_CUT=$(( ${#REVERSEPRIMER_RC} * ${MIN_PRIMER_OVERLAP_FRAC} ))
 WORKFLOW_SUFFIX=".trimmed.assembled.bothdir_concat.primer_cut.feature_filtered.derep.non_chimeras_denovo"
@@ -36,7 +37,6 @@ echo "Project ID: "${PROJECT_ID}
 echo "PIs: "${PI_NAMES}
 echo "Target: "${TARGET_MOLECULE}" "${TARGET_REGION}
 echo "Reference(s): "${REF_DBS}
-sleep 1
 
 #########################
 ### Check environment ###
@@ -52,7 +52,6 @@ which ${PEAR} > /dev/null; if [ $? -ne 0 ]; then echo "PEAR not found; exit"; ex
 which ${VSEARCH} > /dev/null; if [ $? -ne 0 ]; then echo "VSEARCH not found; exit"; exit 1; else echo "VSEARCH found"; fi
 which ${MOTHUR} > /dev/null; if [ $? -ne 0 ]; then echo "MOTHUR not found; exit"; exit 1; else echo "MOTHUR found"; fi
 which parallel > /dev/null; if [ $? -ne 0 ]; then echo "GNU PARALLEL not found; exit"; exit 1; else echo "GNU PARALLEL found"; fi
-sleep 2
 
 echo "Check max number of open file desriptors"
 ### EXIT IF NUMBER OF FILES EXCEED MAX NUMBER OF OPEN FILE DESCRIPTORS
@@ -77,19 +76,21 @@ rm -rf ${LOG_FP} ${RESULTS_DIR} ${S_STRUCT} ${S_STATS} ${S_SEEDS}* ${S_SWARM} ${
 `basename ${OTU_TABLE} .csv`* ${AMPLICON_TABLE}
 mkdir ${LOG_FP} ${RESULTS_DIR}
 if [ ! -e ${REF_USED_FP} ]; then mkdir ${REF_USED_FP}; fi
+if [ ${REUSE_REF_SEQS} == "NO" ]; then rm -r ${REF_USED_FP}; mkdir ${REF_USED_FP}; fi
 
 ## CREATE PRIMER-TRIMMED REFDBS
+#rm -r ${REF_USED_FP}
 for i in ${REF_DBS}; do
-	if [ ! -s ${REF_USED_FP}"/"$i"_"${FORWARDPRIMER}"_"${REVERSEPRIMER_RC}"_"${PRIMER_MISMATCH}"_"${lenFP_CUT}"_"${lenRP_CUT}".fasta" ]; then
+	if [ ! -s ${REF_USED_FP}"/"$i"_"${FORWARDPRIMER}"_"${REVERSEPRIMER_RC}"_"${PRIMER_MISMATCH_REF}"_"${lenFP_CUT_REF}"_"${lenRP_CUT_REF}".fasta" ]; then
 		cat ${REF_RAW_PATH}"/"$i".fasta" | \
-		${CUTADAPT} -g ${FORWARDPRIMER} --discard-untrimmed -e ${PRIMER_MISMATCH} -O ${lenFP_CUT} - | \
-		${CUTADAPT} -a ${REVERSEPRIMER_RC} --discard-untrimmed -e ${PRIMER_MISMATCH} -O ${lenRP_CUT} - \
-		> ${REF_USED_FP}"/"$i"_"${FORWARDPRIMER}"_"${REVERSEPRIMER_RC}"_"${PRIMER_MISMATCH}"_"${lenFP_CUT}"_"${lenRP_CUT}".fasta"
+		${CUTADAPT} -g ${FORWARDPRIMER} --discard-untrimmed --minimum-length ${MIN_LEN_REF} -e ${PRIMER_MISMATCH_REF} -O ${lenFP_CUT_REF} - | \
+		${CUTADAPT} -a ${REVERSEPRIMER_RC} --discard-untrimmed --minimum-length ${MIN_LEN_REF} --maximum-length ${MAX_LEN_REF} -e ${PRIMER_MISMATCH_REF} -O ${lenRP_CUT_REF} - \
+		> ${REF_USED_FP}"/"$i"_"${FORWARDPRIMER}"_"${REVERSEPRIMER_RC}"_"${PRIMER_MISMATCH_REF}"_"${lenFP_CUT_REF}"_"${lenRP_CUT_REF}".fasta"
 	fi #trim primer from sequences
-	if [ ! -s ${REF_USED_FP}"/"$i"_"${FORWARDPRIMER}"_"${REVERSEPRIMER_RC}"_"${PRIMER_MISMATCH}"_"${lenFP_CUT}"_"${lenRP_CUT}".tax" ]; then
-		grep '>' ${REF_USED_FP}"/"$i"_"${FORWARDPRIMER}"_"${REVERSEPRIMER_RC}"_"${PRIMER_MISMATCH}"_"${lenFP_CUT}"_"${lenRP_CUT}".fasta" | \
+	if [ ! -s ${REF_USED_FP}"/"$i"_"${FORWARDPRIMER}"_"${REVERSEPRIMER_RC}"_"${PRIMER_MISMATCH_REF}"_"${lenFP_CUT_REF}"_"${lenRP_CUT_REF}".tax" ]; then
+		grep '>' ${REF_USED_FP}"/"$i"_"${FORWARDPRIMER}"_"${REVERSEPRIMER_RC}"_"${PRIMER_MISMATCH_REF}"_"${lenFP_CUT_REF}"_"${lenRP_CUT_REF}".fasta" | \
 		tr -d '^>' | awk 'FNR==NR{a[$1]=$1; next}($1 in a){print $0}' - ${REF_RAW_PATH}"/"$i".tax" \
-		> ${REF_USED_FP}"/"$i"_"${FORWARDPRIMER}"_"${REVERSEPRIMER_RC}"_"${PRIMER_MISMATCH}"_"${lenFP_CUT}"_"${lenRP_CUT}".tax"
+		> ${REF_USED_FP}"/"$i"_"${FORWARDPRIMER}"_"${REVERSEPRIMER_RC}"_"${PRIMER_MISMATCH_REF}"_"${lenFP_CUT_REF}"_"${lenRP_CUT_REF}".tax"
 	fi
 done
 
@@ -103,15 +104,16 @@ cut -f1 ${PROJECT_ID}*".map" > seq_number_stats.interm
 cat ${PROJECT_ID}*".map" | cut -f2 | parallel -j ${THREADS} -k "if [ -s {} ]; then zgrep -c '^+$' {}; else echo '-'; fi " >> seq_number_stats.interm
 
 ## QUAL TRIM SEQUENCES
-cut -f 1 ${PROJECT_ID}".map" |  grep -v "^#" |tr "." "_" | parallel -j ${THREADS} ${TRIMMOMATIC}" PE -phred33 {}_L001_R1_001.fastq* {}_L001_R2_001.fastq* {.}.trimmed.R1 waste {.}.trimmed.R2 waste ILLUMINACLIP:"${ILLUMINACLIP_FP}":"${ILLUMINACLIP_PATTERN}" SLIDINGWINDOW:"${SLIDINGWINDOW}
+#cut -f 1 ${PROJECT_ID}".map" |  grep -v "^#" |tr "." "_" | parallel -j ${THREADS} ${TRIMMOMATIC}" PE -phred33 {}_L001_R1_001.fastq* {}_L001_R2_001.fastq* {.}.trimmed.R1 waste {.}.trimmed.R2 /dev/null ILLUMINACLIP:"${ILLUMINACLIP_FP}":"${ILLUMINACLIP_PATTERN}" SLIDINGWINDOW:"${SLIDINGWINDOW}
+cut -f 1 ${PROJECT_ID}".map" |  grep -v "^#" |tr "." "_" | parallel -j ${THREADS} ${TRIMMOMATIC}" PE -phred33 {}_L001_R1_001.fastq* {}_L001_R2_001.fastq* {.}.trimmed.R1 waste {.}.trimmed.R2 /dev/null SLIDINGWINDOW:"${SLIDINGWINDOW}
 rm -rf waste
 ## GET SEQ NUMBER AFTER TRIMMING
 cat ${PROJECT_ID}*".map" | while read a b c ; do if [ -s $a.trimmed.R1 ]; then grep -c "^+$" $a.trimmed.R1; else echo "0"; fi;done >> seq_number_stats.interm
 
 
 ## MERGE PAIRED ENDS
-#ls -S1 . | grep "trimmed.R1" | parallel -j ${THREADS} ${VSEARCH}" --fastq_mergepairs {} --reverse {.}'.R2' --threads 1 --fasta_width 0 --fastq_allowmergestagger --fastq_maxdiffs "${FASTQ_MAXDIFFS}" --fastq_minovlen "${FASTQ_MINOVLEN}" --fastqout {.}.assembled.fastq"
-ls -S1 . | grep "trimmed.R1" | parallel -j ${THREADS} ${PEAR}" --forward-fastq {} --reverse-fastq {.}'.R2' --threads 1 --memory 10000000000 --min-overlap "${FASTQ_MINOVLEN}" --output {.}"
+ls -S1 . | grep "trimmed.R1" | parallel -j ${THREADS} ${VSEARCH}" --fastq_mergepairs {} --reverse {.}'.R2' --fastq_allowmergestagger --threads 1 --fasta_width 0 --fastq_maxdiffs "${FASTQ_MAXDIFFS}" --fastq_minovlen "${FASTQ_MINOVLEN}" --fastqout {.}.assembled.fastq"
+#ls -S1 . | grep "trimmed.R1" | parallel -j ${THREADS} ${PEAR}" --forward-fastq {} --reverse-fastq {.}'.R2' --threads 1 --memory 10000000000 --min-overlap "${FASTQ_MINOVLEN}" --output {.}"
 ## REMOVE NOT NEEDED INTERMEDIATE FILES
 if [ ${DEBUG} == "NO" ]; then rm *trimmed.R1 *trimmed.R2; fi
 ## GET SEQ NUMBER AFTER MERGING/ASSEMBLING
@@ -136,6 +138,7 @@ cat ${PROJECT_ID}*".map" | while read a b c ; do if [ -s $a.trimmed.assembled.bo
 
 
 ## CALCULATE AVG LENGTH AND DEPENDING MINLEN / MAXLEN FOR FEATURE FILTER
+
 AVGLEN=`awk 'NR%4==2 {print length($0)}' *primer_cut.fastq | awk 'BEGIN{leng=0}{leng+=$0}END{print(leng/NR)}'`
 echo $AVGLEN
 #FASTQ_MINLEN=`echo $AVGLEN - $AVGLENRADIUS | bc | cut -d"." -f1`
@@ -282,20 +285,20 @@ awk -v SWARM="${S_SWARM}.no.singletons" \
 ## TAXONOMIC ASSIGNMENT AND MERGE WITH OTU TABLE
 for i in ${REF_DBS}; do
 	${MOTHUR} "#set.dir(output=.);classify.seqs(fasta="${S_SEEDS}".no.singletons,\
-	reference="${REF_USED_FP}"/"$i"_"${FORWARDPRIMER}"_"${REVERSEPRIMER_RC}"_"${PRIMER_MISMATCH}"_"${lenFP_CUT}"_"${lenRP_CUT}".fasta,\
-	taxonomy="${REF_USED_FP}"/"$i"_"${FORWARDPRIMER}"_"${REVERSEPRIMER_RC}"_"${PRIMER_MISMATCH}"_"${lenFP_CUT}"_"${lenRP_CUT}".tax,\
+	reference="${REF_USED_FP}"/"$i"_"${FORWARDPRIMER}"_"${REVERSEPRIMER_RC}"_"${PRIMER_MISMATCH_REF}"_"${lenFP_CUT_REF}"_"${lenRP_CUT_REF}".fasta,\
+	taxonomy="${REF_USED_FP}"/"$i"_"${FORWARDPRIMER}"_"${REVERSEPRIMER_RC}"_"${PRIMER_MISMATCH_REF}"_"${lenFP_CUT_REF}"_"${lenRP_CUT_REF}".tax,\
 	processors="${THREADS}",cutoff="${RDP_CUTOFF}", probs=F);get.current();\
-	rename.file(taxonomy=current,new=swarm."$i"_${FORWARDPRIMER}_${REVERSEPRIMER_RC}_${PRIMER_MISMATCH}_${lenFP_CUT}_${lenRP_CUT}.wang.taxonomy,shorten=false);"
+	rename.file(taxonomy=current,new=swarm."$i"_${FORWARDPRIMER}_${REVERSEPRIMER_RC}_${PRIMER_MISMATCH_REF}_${lenFP_CUT_REF}_${lenRP_CUT_REF}.wang.taxonomy,shorten=false);"
 	rm *wang.tax.summary; mv "mothur"*"logfile" ${LOG_FP}
 	echo -e "$(head -n 1 ${OTU_TABLE})\t$i_taxonomy" > `basename ${OTU_TABLE} ".csv"`_$i.csv
 	awk -F"[_ \t]" 'FNR==NR{a[$2]=$0; next}($1 in a){printf a[$1]"\t"; for (i=3;i<NF;i++) {printf($i"_")}; printf($NF"\n") }' \
-	${OTU_TABLE} swarm."$i"_${FORWARDPRIMER}_${REVERSEPRIMER_RC}_${PRIMER_MISMATCH}_${lenFP_CUT}_${lenRP_CUT}.wang.taxonomy >> `basename ${OTU_TABLE} ".csv"`_$i.csv
+	${OTU_TABLE} swarm."$i"_${FORWARDPRIMER}_${REVERSEPRIMER_RC}_${PRIMER_MISMATCH_REF}_${lenFP_CUT_REF}_${lenRP_CUT_REF}.wang.taxonomy >> `basename ${OTU_TABLE} ".csv"`_$i.csv
 done
 
 
 ## TIMES
 END_DATE=`date +%Y-%m-%d`
-END_TIME=`date +%H:%M:%S`
+END_TIME=`date +%H-%M-%S`
 echo "Analysis starte at "${ST_DATE} ${ST_TIME}
 echo "Analysis ended at "${END_DATE} ${END_TIME}
 DUR_SEC_END=${SECONDS}
@@ -317,11 +320,10 @@ echo '
 body { font-family:Verdana,Arial,Helvetica,sans-serif; background-color: #ffffff; }
 A:link {color: rgb(83, 141, 189) ; text-decoration:none</style></head>
 <body>
- <br><table style="width: 1031px; height: 101px;" border="0"><tbody><tr valign="top"><td><img style="width: 311px; height: 119px;" src="https://www.awi.de/typo3conf/ext/sms_boilerplate/Resources/Public/Images/AWI/awi_logo.svg"></td><td><div style=""><big><br>Alfred Wegener Institute for Polar and Marine
-Research<br><br></big><a href="https://www.awi.de/en/about-us/organisation/staff/stefan-neuhaus.html">Stefan
-Neuhaus | Scientific Computing | Bioinformatics <br>
-phone: +49(471)4831-2329
-| e-mail: Stefan.Neuhaus@awi.de <br>
+<br><table style="width: 1031px; height: 101px;" border="0"><tbody><tr valign="top"><td><img style="width: 311px; height: 119px;" src="https://www.awi.de/typo3conf/ext/sms_boilerplate/Resources/Public/Images/AWI/awi_logo.svg"></td><td><div style="">
+<big><br>Alfred Wegener Institute for Polar and Marine Research
+<br><br></big><a href="https://www.awi.de/en/about-us/organisation/staff/stefan-neuhaus.html">StefanNeuhaus | Scientific Computing | Bioinformatics <br>
+phone: +49(471)4831-2329 | e-mail: Stefan.Neuhaus@awi.de <br>
 </a>
 </div></td></tr></tbody></table><br>
 <hr><br>
@@ -340,7 +342,10 @@ Fwd primer</td><td style="width: 224px;">
 Start time</td><td style="width: 221px;">
 '${ST_TIME}'</td><td style="width: 203px;">
 Rev primer</td><td style="width: 224px;">
-'${REVERSEPRIMER}'</td></tr><tr><td style="width: 213px;">End time</td><td style="width: 221px;">'${END_TIME}'</td><td style="width: 203px;">Reference datasets</td><td style="width: 224px;">'${REF_DBS}'</td></tr><tr><td style="width: 213px;">Sample meta data</td><td style="width: 221px;">&lt;Link to mapping file&gt;</td><td style="width: 203px;"></td><td style="width: 224px;"></td></tr>
+'${REVERSEPRIMER}'</td></tr><tr><td style="width: 213px;">
+End time</td><td style="width: 221px;">'${END_TIME}'</td><td style="width: 203px;">
+Reference datasets</td><td style="width: 224px;">'${REF_DBS}'</td></tr><tr><td style="width: 213px;">
+Sample meta data</td><td style="width: 221px;"><a href='${PROJECT_ID}.map'>'${PROJECT_ID}.map'</a></td><td style="width: 203px;"></td><td style="width: 224px;"></td></tr>
 </tbody>
 </table>
 <span style="font-weight: bold;"></span><br>
@@ -389,15 +394,15 @@ ln -s ../seq_number_stats.txt ../q-zip_workflow.log ../q-zip_commands.sh ../q-zi
 
 
 #for i in `basename ${OTU_TABLE} .csv`"_"\*; do ln -s ../$i ./${RESULTS_DIR}/; done
-for i in ${REF_DBS}; do ot_name=`basename ${OTU_TABLE} .csv`"_"$i".csv"; \
-ln -s ../$ot_name ./${RESULTS_DIR}/$ot_name; done
+for i in ${REF_DBS}; do otu_name=`basename ${OTU_TABLE} .csv`"_"$i".csv"; \
+ln -s ../$otu_name ./${RESULTS_DIR}/$otu_name; done
 
 
 mkdir ./${RESULTS_DIR}/${REF_USED_FP}
 
 for i in ${REF_DBS}; do \
-ln -s ../../${REF_USED_FP}"/"$i"_"${FORWARDPRIMER}"_"${REVERSEPRIMER_RC}"_"${PRIMER_MISMATCH}"_"${lenFP_CUT}"_"${lenRP_CUT}".fasta" ./${RESULTS_DIR}/${REF_USED_FP}
-ln -s ../../${REF_USED_FP}"/"$i"_"${FORWARDPRIMER}"_"${REVERSEPRIMER_RC}"_"${PRIMER_MISMATCH}"_"${lenFP_CUT}"_"${lenRP_CUT}".tax" ./${RESULTS_DIR}/${REF_USED_FP}
+ln -s ../../${REF_USED_FP}"/"$i"_"${FORWARDPRIMER}"_"${REVERSEPRIMER_RC}"_"${PRIMER_MISMATCH_REF}"_"${lenFP_CUT_REF}"_"${lenRP_CUT_REF}".fasta" ./${RESULTS_DIR}/${REF_USED_FP}
+ln -s ../../${REF_USED_FP}"/"$i"_"${FORWARDPRIMER}"_"${REVERSEPRIMER_RC}"_"${PRIMER_MISMATCH_REF}"_"${lenFP_CUT_REF}"_"${lenRP_CUT_REF}".tax" ./${RESULTS_DIR}/${REF_USED_FP}
 done
 
 
