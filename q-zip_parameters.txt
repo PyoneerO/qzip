@@ -3,11 +3,11 @@
 ##################
 
 # GLOBAL
-PI_NAMES=""
-PROJECT_NAME=""
-TARGET_MOLECULE=""
-TARGET_REGION=""
-THREADS="30"
+PI_NAMES="Test_PI"
+PROJECT_NAME="Test_project"
+TARGET_MOLECULE="Test_molecule"
+TARGET_REGION="Test_region"
+THREADS="40"
 #[1:max#cores]
 DEBUG="YES"
 #[YES NO]; NO removes intermediate sequence files if not used anymore
@@ -17,16 +17,17 @@ REF_RAW_PATH="/scratch2/db/q_zip_dbs/"
 REF_DBS="nifH_arb_2014"
 #[silva_ref_v128_full_Euk silva_nr_v128_full_Euk silva_nr_v123_1_full_Euk pr2_gb203_v4_5 silva_nr_v128_full_Pros nifH_arb_2014]
 # mothur issue: please only use AlNum [A-Z,a-z,0-9] and underscore "_" in names for ref_dbs 
-ILLUMINACLIP_FP="/scratch2/sneuhaus/bin/Trimmomatic-0.35/adapters/NexteraPE-PE.fa"
+# ILLUMINACLIP_FP="/scratch2/sneuhaus/bin/Trimmomatic-0.35/adapters/NexteraPE-PE.fa"
 
 # BINARY LOCATIONS
-CUTADAPT="/scratch2/sneuhaus/bin/cutadapt"
-TRIMMOMATIC="/scratch2/sneuhaus/bin/trimmomatic"
-VSEARCH="/scratch2/sneuhaus/bin/vsearch"
-SWARM="/scratch2/sneuhaus/bin/swarm"
-MOTHUR="/scratch2/sneuhaus/bin/mothur"
-FASTQC="/scratch2/sneuhaus/bin/fastqc"
-PEAR="/scratch2/sneuhaus/bin/pear"
+BINDIR="/scratch2/sneuhaus/bin/"
+CUTADAPT=${BINDIR}"/cutadapt"
+TRIMMOMATIC=${BINDIR}"/trimmomatic"
+VSEARCH=${BINDIR}"/vsearch"
+SWARM=${BINDIR}"/swarm"
+MOTHUR=${BINDIR}"/mothur"
+FASTQC=${BINDIR}"/fastqc"
+PEAR=${BINDIR}"/pear"
 
 # DIRECTORY SETTINGS
 REF_USED_FP="./refDB/"
@@ -37,30 +38,42 @@ RESULTS_DIR="./results"
 FORWARDPRIMER="TGYGAYCCNAARGCNGA"
 REVERSEPRIMER="ADNGCCATCATYTCNCC"
 
-# CUTADAPT FILTER (REFERENCE SEQS AND QUERIES)
-PRIMER_MISMATCH="0.25"
-MIN_PRIMER_OVERLAP_FRAC="8/10"
+# PREPARE REFS
+# reuse reference sequences if prepared in a former run
+#REUSE_REF_SEQS=NO
+# cutadapt filter (reference sequence length + primer found)
+MIN_LEN_REF=200
+MAX_LEN_REF=550
+PRIMER_MISMATCH_REF="0.1"
+MIN_PRIMER_OVERLAP_FRAC_REF="75/100"
 # value as fraction
 
 # TRIMMOMATIC
-ILLUMINACLIP_PATTERN="2:30:10:3:TRUE"
+#ILLUMINACLIP_PATTERN="2:30:10:3:TRUE"
 SLIDINGWINDOW="3:8"
 
 # VSEARCH merge/assemble paired-ends
-#FASTQ_MAXDIFFS="5"
-#FASTQ_MINOVLEN="50"
+FASTQ_MAXDIFFS="5"
+FASTQ_MINOVLEN="50"
 
 # PEAR merge/assemble paired-ends
 FASTQ_MINOVLEN="20"
 
-# VSEARCH filter
+# CUTADAPT PRIMER FILTER AND TRIM OF QUERIES
+PRIMER_MISMATCH="0"
+MIN_PRIMER_OVERLAP_FRAC="100/100"
+
+
+## VSEARCH filters
+#maximum expected error per sequence allowed
 FASTQ_MAXEE="1"
-#feature filter
-FASTQ_MAXLEN="600" #FASTQ_MAXLEN = AVGLEN + AVGLENRADIUS #feature filter
-FASTQ_MINLEN="1" #FASTQ_MINLEN = AVGLEN - AVGLENRADIUS #feature filter
+#number ambiguities allowed
+FASTQ_MAXNS="0"
+#length filter
+FASTQ_MINLEN="50" #FASTQ_MAXLEN = AVGLEN + AVGLENRADIUS #feature filter
+FASTQ_MAXLEN="600" #FASTQ_MINLEN = AVGLEN - AVGLENRADIUS #feature filter
 #AVGLENRADIUS="50" #use this setting only if you do not expect high variation of target length
 #feature filter; used to define FASTQ_MAXLEN and FASTQ_MINLEN as AVGLENRADIUS-distant from sample average sequence length
-FASTQ_MAXNS="0"
 #feature filter
 
 # Min sample size filter to feed swarm
@@ -91,3 +104,11 @@ OTU_TABLE="OTU_table.csv"
 AMPLICON_TABLE="amplicon_table.csv"
 
 
+### GET DEPENDING PARAMETER, DO NOT CHANGE
+PROJECT_ID=${PROJECT_NAME}"_"${ST_DATE}_${ST_TIME}
+REVERSEPRIMER_RC=`echo ${REVERSEPRIMER} | tr "[ATGCatgcRYSWKMBDHVryswkmbdhv]" "[TACGtacgYRSWMKVHDByrswmkvhdb]" | rev`
+lenFP_CUT_REF=$(( ${#FORWARDPRIMER} * ${MIN_PRIMER_OVERLAP_FRAC_REF} ))
+lenRP_CUT_REF=$(( ${#REVERSEPRIMER_RC} * ${MIN_PRIMER_OVERLAP_FRAC_REF} ))
+lenFP_CUT=$(( ${#FORWARDPRIMER} * ${MIN_PRIMER_OVERLAP_FRAC} ))
+lenRP_CUT=$(( ${#REVERSEPRIMER_RC} * ${MIN_PRIMER_OVERLAP_FRAC} ))
+WORKFLOW_SUFFIX=".trimmed.assembled.bothdir_concat.primer_cut.feature_filtered.derep.non_chimeras_denovo"
