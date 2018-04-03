@@ -22,15 +22,6 @@ sleep 1
 . ./q-zip_parameters.txt
 cat q-zip_parameters.txt
 
-### GET DEPENDING PARAMETER, DO NOT CHANGE
-PROJECT_ID=${PROJECT_NAME}"_"${ST_DATE}_${ST_TIME}
-REVERSEPRIMER_RC=`echo ${REVERSEPRIMER} | tr "[ATGCatgcRYSWKMBDHVryswkmbdhv]" "[TACGtacgYRSWMKVHDByrswmkvhdb]" | rev`
-lenFP_CUT_REF=$(( ${#FORWARDPRIMER} * ${MIN_PRIMER_OVERLAP_FRAC_REF} ))
-lenRP_CUT_REF=$(( ${#REVERSEPRIMER_RC} * ${MIN_PRIMER_OVERLAP_FRAC_REF} ))
-lenFP_CUT=$(( ${#FORWARDPRIMER} * ${MIN_PRIMER_OVERLAP_FRAC} ))
-lenRP_CUT=$(( ${#REVERSEPRIMER_RC} * ${MIN_PRIMER_OVERLAP_FRAC} ))
-WORKFLOW_SUFFIX=".trimmed.assembled.bothdir_concat.primer_cut.feature_filtered.derep.non_chimeras_denovo"
-
 ### PROJECT INFO SUMMARY
 echo "Project name: "${PROJECT_NAME}
 echo "Project ID: "${PROJECT_ID}
@@ -72,84 +63,143 @@ fi
 
 ## CLEAN AND CREATE NEEDED DIRECTORIES
 rm -rf ${LOG_FP} ${RESULTS_DIR} ${S_STRUCT} ${S_STATS} ${S_SEEDS}* ${S_SWARM} ${PROJECT_NAME}*".map" \
-*"trimmed"* "waste" "full_set_dereplicated.fasta" "seq_number_stats.txt" *"wang"* \
-`basename ${OTU_TABLE} .csv`* ${AMPLICON_TABLE}
-mkdir ${LOG_FP} ${RESULTS_DIR}
-if [ ! -e ${REF_USED_FP} ]; then mkdir ${REF_USED_FP}; fi
-if [ ${REUSE_REF_SEQS} == "NO" ]; then rm -r ${REF_USED_FP}; mkdir ${REF_USED_FP}; fi
+*"trimmed"* "waste" "full_set_dereplicated.fasta" "seq_number_stats.txt" *"wang"* q-zip_seq_of_coms.txt  \
+`basename ${OTU_TABLE} .csv`* ${AMPLICON_TABLE} ${REF_USED_FP}
+mkdir ${LOG_FP} ${RESULTS_DIR} ${REF_USED_FP}
+#if [ ! -e ${REF_USED_FP} ]; then mkdir ${REF_USED_FP}; fi
+#if [ ${REUSE_REF_SEQS} == "NO" ]; then rm -r ${REF_USED_FP}; mkdir ${REF_USED_FP}; fi
+touch q-zip_seq_of_coms.txt
 
-## CREATE PRIMER-TRIMMED REFDBS
-#rm -r ${REF_USED_FP}
-for i in ${REF_DBS}; do
-	if [ ! -s ${REF_USED_FP}"/"$i"_"${FORWARDPRIMER}"_"${REVERSEPRIMER_RC}"_"${PRIMER_MISMATCH_REF}"_"${lenFP_CUT_REF}"_"${lenRP_CUT_REF}".fasta" ]; then
-		cat ${REF_RAW_PATH}"/"$i".fasta" | \
-		${CUTADAPT} -g ${FORWARDPRIMER} --discard-untrimmed --minimum-length ${MIN_LEN_REF} -e ${PRIMER_MISMATCH_REF} -O ${lenFP_CUT_REF} - | \
-		${CUTADAPT} -a ${REVERSEPRIMER_RC} --discard-untrimmed --minimum-length ${MIN_LEN_REF} --maximum-length ${MAX_LEN_REF} -e ${PRIMER_MISMATCH_REF} -O ${lenRP_CUT_REF} - \
-		> ${REF_USED_FP}"/"$i"_"${FORWARDPRIMER}"_"${REVERSEPRIMER_RC}"_"${PRIMER_MISMATCH_REF}"_"${lenFP_CUT_REF}"_"${lenRP_CUT_REF}".fasta"
-	fi #trim primer from sequences
-	if [ ! -s ${REF_USED_FP}"/"$i"_"${FORWARDPRIMER}"_"${REVERSEPRIMER_RC}"_"${PRIMER_MISMATCH_REF}"_"${lenFP_CUT_REF}"_"${lenRP_CUT_REF}".tax" ]; then
-		grep '>' ${REF_USED_FP}"/"$i"_"${FORWARDPRIMER}"_"${REVERSEPRIMER_RC}"_"${PRIMER_MISMATCH_REF}"_"${lenFP_CUT_REF}"_"${lenRP_CUT_REF}".fasta" | \
-		tr -d '^>' | awk 'FNR==NR{a[$1]=$1; next}($1 in a){print $0}' - ${REF_RAW_PATH}"/"$i".tax" \
-		> ${REF_USED_FP}"/"$i"_"${FORWARDPRIMER}"_"${REVERSEPRIMER_RC}"_"${PRIMER_MISMATCH_REF}"_"${lenFP_CUT_REF}"_"${lenRP_CUT_REF}".tax"
-	fi
-done
+## PREPARE REPRODUCIBILITY VIA TRACE FILE
+echo "#Sequence of commands for current project:" > q-zip_seq_of_coms.txt
+echo "PROJECT_ID="$PROJECT_ID >> q-zip_seq_of_coms.txt
+echo -e "\n#source parameter" >> q-zip_seq_of_coms.txt
+echo ". ./q-zip_parameters.txt" >> q-zip_seq_of_coms.txt
+echo -e "\n#create needed directory for reference sequences" >> q-zip_seq_of_coms.txt
+echo "mkdir "${REF_USED_FP} >> q-zip_seq_of_coms.txt
+
+
+## CREATE PRIMER-TRIMMED REFDB
+#for i in ${REF_DBS}; do
+#searching and trimming of primer of reference sequences
+#create command
+cmd='cat ${REF_RAW_PATH}"/"${REF_DBS}".fasta" |
+${CUTADAPT} -g ${FORWARDPRIMER} --discard-untrimmed --minimum-length ${MIN_LEN_REF} -e ${PRIMER_MISMATCH_REF} -O ${lenFP_CUT_REF} - |
+${CUTADAPT} -a ${REVERSEPRIMER_RC} --discard-untrimmed --minimum-length ${MIN_LEN_REF} --maximum-length ${MAX_LEN_REF} -e ${PRIMER_MISMATCH_REF} -O ${lenRP_CUT_REF} -
+> ${REF_USED_FP}"/"${REF_DBS}"_"${FORWARDPRIMER}"_"${REVERSEPRIMER_RC}"_"${PRIMER_MISMATCH_REF}"_"${lenFP_CUT_REF}"_"${lenRP_CUT_REF}".fasta"'
+#execute command
+eval $cmd
+#write command to record file
+echo -e "\n#Search for primers in reference and trimming of primers:" >> q-zip_seq_of_coms.txt
+echo $cmd >> q-zip_seq_of_coms.txt
+#create corresponding taxonomy map
+#create command
+cmd='grep ">" ${REF_USED_FP}"/"${REF_DBS}"_"${FORWARDPRIMER}"_"${REVERSEPRIMER_RC}"_"${PRIMER_MISMATCH_REF}"_"${lenFP_CUT_REF}"_"${lenRP_CUT_REF}".fasta" |
+tr -d "^>" | awk '\''FNR==NR{a[$1]=$1; next}($1 in a){print $0}'\'' - ${REF_RAW_PATH}"/"${REF_DBS}".tax"
+> ${REF_USED_FP}"/"${REF_DBS}"_"${FORWARDPRIMER}"_"${REVERSEPRIMER_RC}"_"${PRIMER_MISMATCH_REF}"_"${lenFP_CUT_REF}"_"${lenRP_CUT_REF}".tax"'
+#execute command
+eval $cmd
+#write sequence of commands to record file
+echo -e "\n#prepare corresponding taxonomy map:" >> q-zip_seq_of_coms.txt
+echo $cmd >> q-zip_seq_of_coms.txt
+#done
 
 ## CREATE RAW FILES TO SAMPLE MAPPING
-ls -1 | grep "001.fastq.gz$\|001.fastq$" | awk '{if ($0 ~ /_R1_/) {printf($0); gsub(/_L00[1-4]_R1_001.fastq.gz/,"",$0); gsub(/_L00[1-4]_R1_001.fastq/,"",$0) ; printf "\t"$0"\t"} else {print $0}}' | awk '{print($2"\t"$1"\t"$3)}' > ${PROJECT_ID}".map"
+# create command
+cmd='ls -1 | grep "001.fastq.gz$\|001.fastq$" |
+awk '\''{if ($0 ~ /_R1_/) {printf($0); gsub(/_L00[1-4]_R1_001.fastq.gz/,"",$0); gsub(/_L00[1-4]_R1_001.fastq/,"",$0) ; printf("\t"$0"\t")} else {print $0}}'\'' |
+awk '\''{print($2"\t"$1"\t"$3)}'\'' > ${PROJECT_ID}".map"'
+# execute command
+eval $cmd
+#write command to command record file
+echo -e "\n#prepare sample name mapping file:" >> q-zip_seq_of_coms.txt
+echo $cmd >> q-zip_seq_of_coms.txt
 
 ## GET SAMPLE NAMES FOR STATISTICS
 cut -f1 ${PROJECT_ID}*".map" > seq_number_stats.interm
-
 ## COUNT SEQUENCES IN RAW FILES FOR STATISTICS
 cat ${PROJECT_ID}*".map" | cut -f2 | parallel -j ${THREADS} -k "if [ -s {} ]; then zgrep -c '^+$' {}; else echo '-'; fi " >> seq_number_stats.interm
 
 ## QUAL TRIM SEQUENCES
-#cut -f 1 ${PROJECT_ID}".map" |  grep -v "^#" |tr "." "_" | parallel -j ${THREADS} ${TRIMMOMATIC}" PE -phred33 {}_L001_R1_001.fastq* {}_L001_R2_001.fastq* {.}.trimmed.R1 waste {.}.trimmed.R2 /dev/null ILLUMINACLIP:"${ILLUMINACLIP_FP}":"${ILLUMINACLIP_PATTERN}" SLIDINGWINDOW:"${SLIDINGWINDOW}
-cut -f 1 ${PROJECT_ID}".map" |  grep -v "^#" |tr "." "_" | parallel -j ${THREADS} ${TRIMMOMATIC}" PE -phred33 {}_L001_R1_001.fastq* {}_L001_R2_001.fastq* {.}.trimmed.R1 waste {.}.trimmed.R2 /dev/null SLIDINGWINDOW:"${SLIDINGWINDOW}
-rm -rf waste
+# create command
+cmd='cut -f 1 ${PROJECT_ID}".map" |  grep -v "^#" |tr "." "_" |
+parallel -j ${THREADS} ${TRIMMOMATIC}" PE -phred33 {}_L001_R1_001.fastq* {}_L001_R2_001.fastq* {.}.trimmed.R1 /dev/null {.}.trimmed.R2 /dev/null SLIDINGWINDOW:"${SLIDINGWINDOW}'
+#execute command
+eval $cmd
+#write sequence of commands to record file
+echo -e "\n#3'-end trimming:" >> q-zip_seq_of_coms.txt
+echo $cmd >> q-zip_seq_of_coms.txt
 ## GET SEQ NUMBER AFTER TRIMMING
 cat ${PROJECT_ID}*".map" | while read a b c ; do if [ -s $a.trimmed.R1 ]; then grep -c "^+$" $a.trimmed.R1; else echo "0"; fi;done >> seq_number_stats.interm
 
-
 ## MERGE PAIRED ENDS
-ls -S1 . | grep "trimmed.R1" | parallel -j ${THREADS} ${VSEARCH}" --fastq_mergepairs {} --reverse {.}'.R2' --fastq_allowmergestagger --threads 1 --fasta_width 0 --fastq_maxdiffs "${FASTQ_MAXDIFFS}" --fastq_minovlen "${FASTQ_MINOVLEN}" --fastqout {.}.assembled.fastq"
-#ls -S1 . | grep "trimmed.R1" | parallel -j ${THREADS} ${PEAR}" --forward-fastq {} --reverse-fastq {.}'.R2' --threads 1 --memory 10000000000 --min-overlap "${FASTQ_MINOVLEN}" --output {.}"
+#create command
+cmd='ls -S1 . | grep "trimmed.R1" |
+parallel -j ${THREADS} ${VSEARCH}" --fastq_mergepairs {} --reverse {.}'.R2' --fastq_allowmergestagger --threads 1 --fasta_width 0 --fastq_maxdiffs "${FASTQ_MAXDIFFS}" --fastq_minovlen "${FASTQ_MINOVLEN}" --fastqout {.}.assembled.fastq"'
+#execute command
+eval $cmd
+#write sequence of commands to record file
+echo -e "\n#paired-end merging:" >> q-zip_seq_of_coms.txt
+echo $cmd >> q-zip_seq_of_coms.txt
+
 ## REMOVE NOT NEEDED INTERMEDIATE FILES
 if [ ${DEBUG} == "NO" ]; then rm *trimmed.R1 *trimmed.R2; fi
 ## GET SEQ NUMBER AFTER MERGING/ASSEMBLING
 cat ${PROJECT_ID}*".map" | while read a b c ; do if [ -s $a.trimmed.assembled.fastq ]; then grep -c "^+$" $a.trimmed.assembled.fastq; else echo "0"; fi;done >> seq_number_stats.interm
 
 ## CREATE REVERSE COMPLEMENTED SEQUENCES
-ls -S1 . | grep ".assembled.fastq" | parallel -j ${THREADS} ${VSEARCH}" --fastx_revcomp {} --threads 1 --fastq_ascii 33 --fasta_width 0 --fastqout {.}.revcomp.fastq"
+#create command
+cmd='ls -S1 . | grep ".assembled.fastq" |
+parallel -j ${THREADS} ${VSEARCH}" --fastx_revcomp {} --threads 1 --fastq_ascii 33 --fasta_width 0 --fastqout {.}.revcomp.fastq"'
+#execute command
+eval $cmd
+#write sequence of commands to record file
+echo -e "\n#create reverse complement:" >> q-zip_seq_of_coms.txt
+echo $cmd >> q-zip_seq_of_coms.txt
+
 ## MERGE BOTH DIRECTION
-ls -1 . | grep ".assembled.fastq" | awk '{gsub("fastq","",$1); printf($1"bothdir_concat.fastq\t"$1"fastq\t"$1"revcomp.fastq\n")}' | while read a b c ; do cat $b $c > $a ; done
+#create command
+cmd='ls -1 . | grep ".assembled.fastq" |
+awk '\''{gsub("fastq","",$1); printf($1"bothdir_concat.fastq\t"$1"fastq\t"$1"revcomp.fastq\n")}'\'' |
+while read a b c ; do cat $b $c > $a ; done'
+#execute command
+eval $cmd
+#write sequence of commands to record file
+echo -e "\n#concatenate both directions:" >> q-zip_seq_of_coms.txt
+echo $cmd >> q-zip_seq_of_coms.txt
+
 ## REMOVE NOT NEEDED INTERMEDIATE FILES
 if [ ${DEBUG} == "NO" ]; then rm *assembled.fastq *assembled.revcomp.fastq; fi
 
 ## FILTER BY EXISTENENCE OF BOTH PRIMERS AND TRUNCATE PRIMER SEQUENCES
-ls -S1 | grep "bothdir_concat.fastq" | parallel -j ${THREADS} "cat {} | "\
-${CUTADAPT}" -g "${FORWARDPRIMER}" -e "${PRIMER_MISMATCH}" -O "${lenFP_CUT}" --discard-untrimmed - | "\
-${CUTADAPT}" -a "${REVERSEPRIMER_RC}" -e "${PRIMER_MISMATCH}" -O "${lenRP_CUT}" --discard-untrimmed - \
-> {.}.primer_cut.fastq"
+#create command
+cmd='ls -S1 | grep "bothdir_concat.fastq" |
+parallel -j ${THREADS} "cat {} | "${CUTADAPT}" -g "${FORWARDPRIMER}" -e "${PRIMER_MISMATCH}" -O "${lenFP_CUT}" --discard-untrimmed - | "${CUTADAPT}" -a "${REVERSEPRIMER_RC}" -e "${PRIMER_MISMATCH}" -O "${lenRP_CUT}" --discard-untrimmed -
+> {.}.primer_cut.fastq"'
+#execute command
+eval $cmd
+#write sequence of commands to record file
+echo -e "\n#filter and trim primer:" >> q-zip_seq_of_coms.txt
+echo $cmd >> q-zip_seq_of_coms.txt
+
+
 ## REMOVE NOT NEEDED INTERMEDIATE FILES
 if [ ${DEBUG} == "NO" ]; then rm *bothdir_concat.fastq; fi
 ## GET SEQ NUMBER AFTER PRIMER FILTERING
 cat ${PROJECT_ID}*".map" | while read a b c ; do if [ -s $a.trimmed.assembled.bothdir_concat.primer_cut.fastq ]; then grep -c "^+$" $a.trimmed.assembled.bothdir_concat.primer_cut.fastq; else echo "0"; fi;done >> seq_number_stats.interm
 
 
-## CALCULATE AVG LENGTH AND DEPENDING MINLEN / MAXLEN FOR FEATURE FILTER
-
-AVGLEN=`awk 'NR%4==2 {print length($0)}' *primer_cut.fastq | awk 'BEGIN{leng=0}{leng+=$0}END{print(leng/NR)}'`
-echo $AVGLEN
-#FASTQ_MINLEN=`echo $AVGLEN - $AVGLENRADIUS | bc | cut -d"." -f1`
-echo $FASTQ_MINLEN
-#FASTQ_MAXLEN=`echo $AVGLEN + $AVGLENRADIUS | bc | cut -d"." -f1`
-echo $FASTQ_MAXLEN
 ## FEATURE FILTERING AND SHA1-RELABELing
-ls -S1 | grep "primer_cut.fastq" | parallel -j ${THREADS} \
-"${VSEARCH} --threads 1 --fastq_ascii 33 --fasta_width 0 --fastx_filter {} \
---fastq_maxee "${FASTQ_MAXEE}" --fastq_maxlen "${FASTQ_MAXLEN}" --fastq_minlen "${FASTQ_MINLEN}" \
---fastq_maxns "${FASTQ_MAXNS}" --relabel_sha1 --relabel_keep --fastqout {.}.feature_filtered.fastq"
+#create command
+cmd='ls -S1 | grep "primer_cut.fastq" |
+parallel -j ${THREADS} ${VSEARCH}" --threads 1 --fastq_ascii 33 --fasta_width 0 --fastx_filter {} --fastq_maxee "${FASTQ_MAXEE}" --fastq_maxlen "${FASTQ_MAXLEN}" --fastq_minlen "${FASTQ_MINLEN}" --fastq_maxns "${FASTQ_MAXNS}" --relabel_sha1 --relabel_keep --fastqout {.}.feature_filtered.fastq"'
+#execute command
+eval $cmd
+#write sequence of commands to record file
+echo -e "\n#Feature filtering and sha1 relabeling:" >> q-zip_seq_of_coms.txt
+echo $cmd >> q-zip_seq_of_coms.txt
+
+
 ## REMOVE NOT NEEDED INTERMEDIATE FILES
 if [ ${DEBUG} == "NO" ]; then rm *primer_cut.fastq; fi
 ## GET SEQ NUMBER AFTER FEATURE FILTERING
@@ -167,14 +217,52 @@ cat ${PROJECT_ID}*".map" | while read a b c ; do if [ -s $a.trimmed.assembled.bo
 # Sequence length distribution => [PASS | WARN]
 
 ## DEREPLICATION ON SAMPLE LEVEL
-ls -S1 | grep "feature_filtered.fastq" | parallel -j ${THREADS} ${VSEARCH}" --derep_fulllength {} --threads 1 --fasta_width 0 --relabel_sha1 --sizeout --output {.}.derep.fasta"
+#create command
+cmd='ls -S1 | grep "feature_filtered.fastq" |
+parallel -j ${THREADS} ${VSEARCH}" --derep_fulllength {} --threads 1 --fasta_width 0 --relabel_sha1 --sizeout --output {.}.derep.fasta"'
+#execute command
+eval $cmd
+#write sequence of commands to record file
+echo -e "\n#dereplication on sample level:" >> q-zip_seq_of_coms.txt
+echo $cmd >> q-zip_seq_of_coms.txt
+
+
 ## GET SEQ NUMBER AFTER DEREPLICATION
 cat ${PROJECT_ID}*".map" | while read a b c ; do if [ -s $a.trimmed.assembled.bothdir_concat.primer_cut.feature_filtered.derep.fasta ]; then grep -c "^>" $a.trimmed.assembled.bothdir_concat.primer_cut.feature_filtered.derep.fasta; else echo "0"; fi;done >> seq_number_stats.interm
 ## REMOVE NOT NEEDED INTERMEDIATE FILES
 if [ ${DEBUG} == "NO" ]; then rm *feature_filtered.fastq; fi
 
 ## DETECT AND REMOVE CHIMERAS DENOVO
-ls -1S | grep "derep.fasta" | parallel -j ${THREADS} ${VSEARCH}" --fasta_width 0 --threads 1 --uchime_denovo {} --sizein --sizeout --nonchimeras {.}.non_chimeras_denovo.fasta --chimeras {.}.chimeras_denovo.fasta"
+#Detect chimera
+# create command
+cmd='ls -1S | grep "derep.fasta" |
+parallel -j ${THREADS} ${VSEARCH}" --fasta_width 0 --threads 1 --uchime_denovo {} --fasta_score --chimeras {.}.chimeras_denovo.fasta"'
+#execute command
+eval $cmd
+#write sequence of commands to record file
+echo -e "\n#detect chimera:" >> q-zip_seq_of_coms.txt
+echo $cmd >> q-zip_seq_of_coms.txt
+#consider potential chimera only if they only occur in one sample (blacklist)
+# create command
+cmd='awk -F";" '\''NR%2==1 {gsub(">","");print $1}'\'' *chimeras_denovo.fasta |
+sort -n | uniq -c | sort -nr | awk '\''{if ($1==1) print $2}'\'' > chimera.list'
+#execute command
+eval $cmd
+#write sequence of commands to record file
+echo -e "\n#create chimera black list:" >> q-zip_seq_of_coms.txt
+echo $cmd >> q-zip_seq_of_coms.txt
+#remove chimeric sequences from fastas
+#create command
+cmd='ls -1S | grep "derep.fasta" |
+parallel -j ${THREADS} "awk '\''FNR==NR{a[\$1]=\$1; next}(!(substr(\$0,2,index(\$0,\";\")-2) in a) && (\$0 ~ />/)){if (\$0 ~ /^>/) print \$0; getline; print}'\'' chimera.list {}
+> {.}.non_chimeras_denovo.fasta"'
+#execute command
+eval $cmd
+#write sequence of commands to record file
+echo -e "\n#filter chimera from fastas files:" >> q-zip_seq_of_coms.txt
+echo $cmd >> q-zip_seq_of_coms.txt
+
+
 ## REMOVE NOT NEEDED INTERMEDIATE FILES
 if [ ${DEBUG} == "NO" ]; then rm *derep.fasta; rm *derep.chimeras_denovo.fasta; fi
 # GET SEQ NUMBER AFTER CHIMERA REMOVAL
@@ -189,19 +277,32 @@ awk -F"_" 'BEGIN{seqnr=0}NR%2==1{seqnr=$2;getline; print(seqnr*length($0), seqnr
 awk 'BEGIN{leng=0;seqnr=0}{leng+=$1;seqnr+=$2}END{print(leng/seqnr)}'; else echo "-"; fi;done >> seq_number_stats.interm
 
 ## REMOVE FASTAS WITH TOO FEW SEQS
-for i in *"${WORKFLOW_SUFFIX}.fasta"; do cnt=`awk -F "[;=]" 'BEGIN{cnt=0}{cnt+=$3}END{print cnt}' $i`; \
-if [[ $cnt -lt ${MIN_SAMPLE_SIZE} ]]; then echo "remove "$i", too few sequences ("$cnt")"; rm $i; fi; done
+# create command
+cmd='for i in *"${WORKFLOW_SUFFIX}.fasta"; do cnt=`awk -F"[;=]" '\''BEGIN{cnt=0}{cnt+=$3}END{print cnt}'\'' $i`; 
+if [[ $cnt -lt ${MIN_SAMPLE_SIZE} ]]; then echo "remove "$i", too few sequences ("$cnt")"; rm $i; fi; done'
+#execute command
+eval $cmd
+#write sequence of commands to record file
+echo -e "\n#Min sample size filter" >> q-zip_seq_of_coms.txt
+echo $cmd >> q-zip_seq_of_coms.txt
+
 
 ## ADD SAMPLE ABUNDANCE FILTER PASSED TO SEQ NUMBER STATS
 cat ${PROJECT_ID}*".map" | while read a b c ; do if [ -s $a*${WORKFLOW_SUFFIX}.fasta ]; then \
 echo "yes"; else echo "no"; fi; done >> seq_number_stats.interm
 
-## DEREPLICATE FULL STUDY
-cat *.non_chimeras_denovo.fasta | ${VSEARCH} --threads ${THREADS} --derep_fulllength - --sizein --sizeout --fasta_width 0 --output full_set_dereplicated.fasta
+## DEREPLICATE FULL STUDY + ADJUST ABUNDANCE INFORMATION FORMAT
+#create command
+#cmd='cat *.non_chimeras_denovo.fasta | ${VSEARCH} --threads ${THREADS} --derep_fulllength - --sizein --sizeout --fasta_width 0 --output full_set_dereplicated.fasta'
+cmd='cat *.non_chimeras_denovo.fasta |
+${VSEARCH} --threads ${THREADS} --derep_fulllength - --sizein --sizeout --fasta_width 0 --output - |
+sed '\''s/;size=/_/; s/;$//'\'' > full_set_dereplicated.fasta'
+#execute command
+eval $cmd
+#write command to command trace file
+echo -e "\n#Dereplicate full study + adjust abundance information:" >> q-zip_seq_of_coms.txt
+echo $cmd >> q-zip_seq_of_coms.txt
 
-## ADJUST ABUNDANCE NOTATION (swarm does not accept "size=XXX" notation)
-#in-place conversion of abundance label; "size=XXX" notation into underscore ("_") notation
-sed -i'' 's/;size=/_/; s/;$//' full_set_dereplicated.fasta
 
 ## ADD HEADER TO STATS FILE
 echo -e "sample_ID\traw\ttrimmed\tassembled\tprimer_filtered\tfeature_filtered\tsample_derep\tchimera_filtered\tfinal_rerep\tavg_length\tsample_passed_abundance_filter" > seq_number_stats.txt
@@ -211,89 +312,172 @@ lns=`awk 'END{print NR}' ${PROJECT_ID}*".map"`; cat seq_number_stats.interm | pr
 column -t seq_number_stats.txt
 
 ## SWARM OTU CLUSTERING
-cat full_set_dereplicated.fasta | ${SWARM} -t ${THREADS} -d ${DISTANCE} -f -b ${F_BOUNDARY} -i ${S_STRUCT} -s ${S_STATS} -w ${S_SEEDS} > ${S_SWARM}
+#create command
+cmd='cat full_set_dereplicated.fasta | ${SWARM} -t ${THREADS} -d ${DISTANCE} -f -b ${F_BOUNDARY} -i ${S_STRUCT} -s ${S_STATS} -w ${S_SEEDS} > ${S_SWARM}'
+#execute command
+eval $cmd
+#write command to command trace file
+echo -e "\n#Do swarming:" >> q-zip_seq_of_coms.txt
+echo $cmd >> q-zip_seq_of_coms.txt
 
-## FILTER SINGLETONS
-# create singleton-free swarm fasta
-awk -F"_" '{if (($0 ~ /^>/) && ($2 >= 2)) {print;getline;print} }' ${S_SEEDS} > ${S_SEEDS}".no.singletons"
-# create singleton-free swarm file
-awk '{if ( NF>1 || (match($0,"_1$") == zero)) print}' ${S_SWARM} > ${S_SWARM}.no.singletons
-# create singleton-free stats file
-awk '{if ($2>1) print}' ${S_STATS} > ${S_STATS}.no.singletons
-# create valid amplicon list
-awk '{gsub(" ","\n");print}' ${S_SWARM}.no.singletons | awk -F"_" '{print $1}'  > swarm.no.singletons
+
+## FILTER SINGLETONS (seeds, swarm and stats file; create amplicon names file)
+#create command
+cmd='awk -F"_" '\''{if (($0 ~ /^>/) && ($2 >= 2)) {print;getline;print} }'\'' ${S_SEEDS} > ${S_SEEDS}".no.singletons";
+awk '\''{if ( NF>1 || (match($0,"_1$") == zero)) print}'\'' ${S_SWARM} > ${S_SWARM}.no.singletons;
+awk '\''{if ($2>1) print}'\'' ${S_STATS} > ${S_STATS}.no.singletons;
+awk '\''{gsub(" ","\n");print}'\'' ${S_SWARM}.no.singletons | awk -F"_" '\''{print $1}'\''  > swarm.no.singletons'
+#execute command
+eval $cmd
+#print command to command trace file
+echo -e "\n#filter singletons from seeds, swarm and stats file and create an amplicon names file:" >> q-zip_seq_of_coms.txt
+echo $cmd >> q-zip_seq_of_coms.txt
+
 
 ## CREATE AMPLICON TABLE
 # create amplicon tables sample-wise
-ls -1S | grep "${WORKFLOW_SUFFIX}.fasta" | parallel -j ${THREADS} \
-"echo {} | awk '{sub(\"${WORKFLOW_SUFFIX}.fasta\",\"\");print}' > {.}.amplicon;\
-awk '/^>/{gsub(/;size=/,\"\t\");gsub(\";\",\"\");gsub(\"^>\",\"\"); print}' {} | \
-awk 'FNR==NR{a[\$1]=\$2;next} {if(a[\$1]!=\"\") print(a[\$1]); if (a[\$1]==\"\") print(\"0\") }' \
-- swarm.no.singletons >> {.}.amplicon "
-# add header for amplicon list
-sed  -i '1i amplicon' swarm.no.singletons
+# create command
+cmd='ls -1S | grep "${WORKFLOW_SUFFIX}.fasta" | parallel -j ${THREADS} "echo {} |
+awk '\''{sub(\"${WORKFLOW_SUFFIX}.fasta\",\"\");print}'\'' > {.}.amplicon;
+awk '\''/^>/{gsub(/;size=/,\"\t\");gsub(\";\",\"\");gsub(\"^>\",\"\"); print}'\'' {} |
+awk '\''FNR==NR{a[\$1]=\$2;next} {if(a[\$1]!=\"\") print(a[\$1]); if (a[\$1]==\"\") print(\"0\") }'\'' - swarm.no.singletons
+>> {.}.amplicon"'
+#execute command
+eval $cmd
+#print command to command trace file
+echo -e "\n#Create amplicon tables for each sample/file" >> q-zip_seq_of_coms.txt
+echo $cmd >> q-zip_seq_of_coms.txt
+
+# add header to amplicon list
+#create command
+cmd='sed  -i '\''1i amplicon'\'' swarm.no.singletons'
+#execute command
+eval $cmd
+#print command to command trace file
+echo -e "\n#add header to amplicon names list:" >> q-zip_seq_of_coms.txt
+echo $cmd >> q-zip_seq_of_coms.txt
+
 # create list of files to be merged column-wise (amplicon names file + amplicon abundance files per sample)
-slist="swarm.no.singletons "`ls -1 | grep ${WORKFLOW_SUFFIX}".amplicon"`
-# merge amplicon names and all amplicon abundances to form an amplicon contingency table by the tool 'paste'
-paste $slist | \
-parallel -j ${THREADS} -k -q --pipe \
-awk '{if ($0 ~ /^amplicon/) {print} else {cnt=0; printf($1); for (i=2;i<=NF;i++) {cnt+=$i; printf("\t"$i)};printf("\t"cnt);printf("\n")}}' \
-> ${AMPLICON_TABLE}"_unsorted"
+#create command
+cmd='slist="swarm.no.singletons "`ls -1 | grep ${WORKFLOW_SUFFIX}".amplicon"`'
+#execute command
+eval $cmd
+#print command to command trace file
+echo -e "\n#create list of files to be merged:" >> q-zip_seq_of_coms.txt
+echo $cmd >> q-zip_seq_of_coms.txt
+
+# merge amplicon names and all amplicon abundances to form an amplicon contingency table by the tool 'paste'; sumup rows
+# create command
+cmd='paste $slist |
+parallel -j ${THREADS} -k -q --pipe awk '\''{if ($0 ~ /^amplicon/) {print} else {cnt=0; printf($1); for (i=2;i<=NF;i++) {cnt+=$i; printf("\t"$i)};printf("\t"cnt);printf("\n")}}'\''
+> ${AMPLICON_TABLE}"_unsorted"'
+#execute command
+eval $cmd
+#print command to command trace file
+echo -e "\n#merge amplicon names and all amplicon abundances to form an amplicon contingency table and sum-up rows (totalamplicon numbers):" >> q-zip_seq_of_coms.txt
+echo $cmd >> q-zip_seq_of_coms.txt
+
 # complete header ("total" for sum-up column)
-sed -i '1s/$/\ttotal/' ${AMPLICON_TABLE}"_unsorted"
+#create command
+cmd='sed -i '\''1s/$/\ttotal/'\'' ${AMPLICON_TABLE}"_unsorted"'
+#execute command
+eval $cmd
+#print command to command trace file
+echo -e "\n#complete header of amplicon table:" >> q-zip_seq_of_coms.txt
+echo $cmd >> q-zip_seq_of_coms.txt
+
 # Sorting of amplicon table
-head -1 ${AMPLICON_TABLE}"_unsorted" > ${AMPLICON_TABLE}
-NUM_FIELDS=`head -2 ${AMPLICON_TABLE}"_unsorted" | tail -1 | awk '{print NF}'`
-LC_ALL=C; awk 'NR > 1' ${AMPLICON_TABLE}"_unsorted" | sort -T . -k${NUM_FIELDS},${NUM_FIELDS}nr -k1,1d >> ${AMPLICON_TABLE}
+#create command
+cmd='head -1 ${AMPLICON_TABLE}"_unsorted" > ${AMPLICON_TABLE};
+NUM_FIELDS=`head -2 ${AMPLICON_TABLE}"_unsorted" | tail -1 | awk '\''{print NF}'\''`;
+LC_ALL=C; awk '\''NR > 1'\'' ${AMPLICON_TABLE}"_unsorted" | sort -T . -k${NUM_FIELDS},${NUM_FIELDS}nr -k1,1d >> ${AMPLICON_TABLE}'
+#execute command
+eval $cmd
+#print command to command trace file
+echo -e "\n#Create sorted version of amplicon table:" >> q-zip_seq_of_coms.txt
+echo $cmd >> q-zip_seq_of_coms.txt
+
 
 ## REMOVE NOT NEEDED INTERMEDIATE FILES
 if [ ${DEBUG} == "NO" ]; then rm *non_chimeras_denovo.fasta *non_chimeras_denovo.amplicon; fi
 
 ## CREATE OTU TABLE
-# Header
-echo -e "#OTU\t$(head -n 1 "${AMPLICON_TABLE}")" > ${OTU_TABLE}
-# Compute "per sample abundance" for each OTU
-cat ${S_STATS}.no.singletons | parallel -j ${THREADS} --pipe -l --block-size 100 --round-robin -q \
-awk -v SWARM="${S_SWARM}.no.singletons" \
-    -v TABLE="${AMPLICON_TABLE}" \
-    'BEGIN {FS = " "
+#header of OTU table
+# create command
+cmd='echo -e "#OTU\t$(head -n 1 "${AMPLICON_TABLE}")\ttaxonomy" > ${OTU_TABLE}'
+# execute command
+eval $cmd
+#print command to command trace file
+echo -e "\n#Create header for OTU table:" >> q-zip_seq_of_coms.txt
+echo $cmd >> q-zip_seq_of_coms.txt
+# OTU table
+# create command
+cmd='
+cat ${S_STATS}.no.singletons | parallel -j ${THREADS} --pipe -l --block-size 100 --round-robin -q 
+awk -v SWARM="${S_SWARM}.no.singletons"
+    -v TABLE="${AMPLICON_TABLE}"
+    '\''BEGIN {FS = " ";
             while ((getline < SWARM) > 0) {
                 swarms[$1] = $0
             }
-            FS = "\t"
+            FS = "\t";
             while ((getline < TABLE) > 0) {
                 table[$1] = $0
             }
            }
-     {# Parse the stat file (OTUs sorted by decreasing abundance)
-      seed = $3 "_" $4
-      n = split(swarms[seed], OTU, "[ _]")
+     {
+      seed = $3 "_" $4;
+      n = split(swarms[seed], OTU, "[ _]");
       for (i = 1; i < n; i = i + 2) {
-          s = split(table[OTU[i]], abundances, "\t")
+          s = split(table[OTU[i]], abundances, "\t");
           for (j = 1; j < s; j++) {
               samples[j] += abundances[j+1]
           }
       }
-      printf "%s\t", $3
+      printf "%s\t", $3;
       for (j = 1; j < s; j++) {
           printf "\t%s", samples[j]
       }
-     printf "\n"
+     printf "\n";
      delete samples
-     }' | awk '{print $NF,$0}' | sort -nr | cut -f2- -d' ' | awk '{print NR"\t"$0}' >> ${OTU_TABLE}
+     }'\'' | awk '\''{print $NF,$0}'\'' | sort -nr | cut -f2- -d" " | awk '\''{gsub("\t\t","\t");print NR"\t"$0}'\'' >> ${OTU_TABLE}'
+#execute command
+eval $cmd
+#write command to command trace file
+echo -e "\n#Create OTU table:" >> q-zip_seq_of_coms.txt
+echo $cmd >> q-zip_seq_of_coms.txt
 
 ## TAXONOMIC ASSIGNMENT AND MERGE WITH OTU TABLE
-for i in ${REF_DBS}; do
-	${MOTHUR} "#set.dir(output=.);classify.seqs(fasta="${S_SEEDS}".no.singletons,\
-	reference="${REF_USED_FP}"/"$i"_"${FORWARDPRIMER}"_"${REVERSEPRIMER_RC}"_"${PRIMER_MISMATCH_REF}"_"${lenFP_CUT_REF}"_"${lenRP_CUT_REF}".fasta,\
-	taxonomy="${REF_USED_FP}"/"$i"_"${FORWARDPRIMER}"_"${REVERSEPRIMER_RC}"_"${PRIMER_MISMATCH_REF}"_"${lenFP_CUT_REF}"_"${lenRP_CUT_REF}".tax,\
-	processors="${THREADS}",cutoff="${RDP_CUTOFF}", probs=F);get.current();\
-	rename.file(taxonomy=current,new=swarm."$i"_${FORWARDPRIMER}_${REVERSEPRIMER_RC}_${PRIMER_MISMATCH_REF}_${lenFP_CUT_REF}_${lenRP_CUT_REF}.wang.taxonomy,shorten=false);"
-	rm *wang.tax.summary; mv "mothur"*"logfile" ${LOG_FP}
-	echo -e "$(head -n 1 ${OTU_TABLE})\t$i_taxonomy" > `basename ${OTU_TABLE} ".csv"`_$i.csv
-	awk -F"[_ \t]" 'FNR==NR{a[$2]=$0; next}($1 in a){printf a[$1]"\t"; for (i=3;i<NF;i++) {printf($i"_")}; printf($NF"\n") }' \
-	${OTU_TABLE} swarm."$i"_${FORWARDPRIMER}_${REVERSEPRIMER_RC}_${PRIMER_MISMATCH_REF}_${lenFP_CUT_REF}_${lenRP_CUT_REF}.wang.taxonomy >> `basename ${OTU_TABLE} ".csv"`_$i.csv
-done
+#for i in ${REF_DBS}; do
+# taxonomic assignment
+# create command
+cmd='
+${MOTHUR} "#set.dir(output=.);classify.seqs(fasta="${S_SEEDS}".no.singletons,
+reference="${REF_USED_FP}"/"${REF_DBS}"_"${FORWARDPRIMER}"_"${REVERSEPRIMER_RC}"_"${PRIMER_MISMATCH_REF}"_"${lenFP_CUT_REF}"_"${lenRP_CUT_REF}".fasta,
+taxonomy="${REF_USED_FP}"/"${REF_DBS}"_"${FORWARDPRIMER}"_"${REVERSEPRIMER_RC}"_"${PRIMER_MISMATCH_REF}"_"${lenFP_CUT_REF}"_"${lenRP_CUT_REF}".tax,
+processors="${THREADS}",cutoff="${RDP_CUTOFF}", probs=F);get.current();
+rename.file(taxonomy=current,new=swarm."${REF_DBS}"_${FORWARDPRIMER}_${REVERSEPRIMER_RC}_${PRIMER_MISMATCH_REF}_${lenFP_CUT_REF}_${lenRP_CUT_REF}.wang.taxonomy,shorten=false);"'
+# execute command
+eval $cmd
+#print command to command trace file
+echo -e "\n#Taxonomic assignment of OTU representatives:" >> q-zip_seq_of_coms.txt
+echo $cmd >> q-zip_seq_of_coms.txt
+# merge taxonomy with OTU table
+# create command
+cmd='
+echo -e "$(head -n 1 ${OTU_TABLE})\t${REF_DBS}_taxonomy" > `basename ${OTU_TABLE} ".csv"`_${REF_DBS}.csv;
+awk -F"[_ \t]" '\''FNR==NR{a[$2]=$0; next}($1 in a){printf a[$1]"\t"; for (i=3;i<NF;i++) {printf($i"_")}; printf($NF"\n") }'\'' ${OTU_TABLE} swarm."${REF_DBS}"_${FORWARDPRIMER}_${REVERSEPRIMER_RC}_${PRIMER_MISMATCH_REF}_${lenFP_CUT_REF}_${lenRP_CUT_REF}.wang.taxonomy 
+>> `basename ${OTU_TABLE} ".csv"`_${REF_DBS}.csv'
+# execute command
+eval $cmd
+#print command to command trace file
+echo -e "\n#Adding taxonomy to OTU table:" >> q-zip_seq_of_coms.txt
+echo $cmd >> q-zip_seq_of_coms.txt
+
+mv "mothur"*"logfile" ${LOG_FP}
+
+
+#done
 
 
 ## TIMES
