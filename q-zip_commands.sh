@@ -42,6 +42,8 @@ which ${SWARM} > /dev/null; if [ $? -ne 0 ]; then echo "SWARM not found; exit"; 
 which ${PEAR} > /dev/null; if [ $? -ne 0 ]; then echo "PEAR not found; exit"; exit 1; else echo "PEAR found"; fi
 which ${VSEARCH} > /dev/null; if [ $? -ne 0 ]; then echo "VSEARCH not found; exit"; exit 1; else echo "VSEARCH found"; fi
 which ${MOTHUR} > /dev/null; if [ $? -ne 0 ]; then echo "MOTHUR not found; exit"; exit 1; else echo "MOTHUR found"; fi
+which ${BIOM} > /dev/null; if [ $? -ne 0 ]; then echo "BIOM-format not found; exit"; exit 1; else echo "BIOM-format found"; fi
+#which ${MULTIQC} > /dev/null; if [ $? -ne 0 ]; then echo "MultiQC not found; exit"; exit 1; else echo "MultiQC found"; fi
 which parallel > /dev/null; if [ $? -ne 0 ]; then echo "GNU PARALLEL not found; exit"; exit 1; else echo "GNU PARALLEL found"; fi
 
 echo "Check max number of open file desriptors"
@@ -404,7 +406,7 @@ if [ ${DEBUG} == "NO" ]; then rm *non_chimeras_denovo.fasta *non_chimeras_denovo
 ## CREATE OTU TABLE
 #header of OTU table
 # create command
-cmd='echo -e "#OTU\t$(head -n 1 "${AMPLICON_TABLE}")\ttaxonomy" > ${OTU_TABLE}'
+cmd='echo -e "#OTU\t$(head -n 1 "${AMPLICON_TABLE}")" > ${OTU_TABLE}'
 # execute command
 eval $cmd
 #print command to command trace file
@@ -448,7 +450,6 @@ echo -e "\n#Create OTU table:" >> q-zip_seq_of_coms.txt
 echo $cmd >> q-zip_seq_of_coms.txt
 
 ## TAXONOMIC ASSIGNMENT AND MERGE WITH OTU TABLE
-#for i in ${REF_DBS}; do
 # taxonomic assignment
 # create command
 cmd='
@@ -462,22 +463,146 @@ eval $cmd
 #print command to command trace file
 echo -e "\n#Taxonomic assignment of OTU representatives:" >> q-zip_seq_of_coms.txt
 echo $cmd >> q-zip_seq_of_coms.txt
+
+mv "mothur"*"logfile" ${LOG_FP}
+
 # merge taxonomy with OTU table
 # create command
 cmd='
-echo -e "$(head -n 1 ${OTU_TABLE})\t${REF_DBS}_taxonomy" > `basename ${OTU_TABLE} ".csv"`_${REF_DBS}.csv;
+echo -e "$(head -n 1 ${OTU_TABLE})\t${REF_DBS}_taxonomy" > ${PROJECT_ID}"_OTU_table.csv";
 awk -F"[_ \t]" '\''FNR==NR{a[$2]=$0; next}($1 in a){printf a[$1]"\t"; for (i=3;i<NF;i++) {printf($i"_")}; printf($NF"\n") }'\'' ${OTU_TABLE} swarm."${REF_DBS}"_${FORWARDPRIMER}_${REVERSEPRIMER_RC}_${PRIMER_MISMATCH_REF}_${lenFP_CUT_REF}_${lenRP_CUT_REF}.wang.taxonomy 
->> `basename ${OTU_TABLE} ".csv"`_${REF_DBS}.csv'
+>> ${PROJECT_ID}"_OTU_table.csv"'
 # execute command
 eval $cmd
 #print command to command trace file
 echo -e "\n#Adding taxonomy to OTU table:" >> q-zip_seq_of_coms.txt
 echo $cmd >> q-zip_seq_of_coms.txt
 
-mv "mothur"*"logfile" ${LOG_FP}
+
+## MAKE BIOM FILE; FUTURE: also external other meta data
+
+#make sample metadata map from raw file to sample map
+# create command
+cmd='cat ${PROJECT_ID}".map" | awk '\''BEGIN{print "#Sample\tR1_raw_file\tR2_raw_file"}{print}'\'' > ${PROJECT_ID}"_sample_metadata.map"'
+#execute command
+eval $cmd
+#print command to command trace file
+echo -e "\n#Make sample metadata map:" >> q-zip_seq_of_coms.txt
+echo $cmd >> q-zip_seq_of_coms.txt
+
+# get pure OTU table + taxonomy
+#create command
+cmd='
+cat ${PROJECT_ID}"_OTU_table.csv" |
+awk '\''{$2="";$(NF-1)="";print}'\'' |
+tr -s " " | tr " " "\t"
+> ${PROJECT_ID}"_OTU_table_pure.csv"'
+#execute command
+eval $cmd
+#print command to command trace file
+echo -e "\n#Get pure OTU table + taxonomy:" >> q-zip_seq_of_coms.txt
+echo $cmd >> q-zip_seq_of_coms.txt
+
+# get observation meta data "total abundance" + "representative amplicon id"
+# create command
+cmd='
+cat ${PROJECT_ID}"_OTU_table.csv" |
+awk '\''{print $1"\t"$(NF-1)"\t"$2}'\''
+> ${PROJECT_ID}"_observation_metadata.map"'
+#execute command
+eval $cmd
+#print command to command trace file
+echo -e "\n#get observation meta data (total abundance + representative amplicon id):" >> q-zip_seq_of_coms.txt
+echo $cmd >> q-zip_seq_of_coms.txt
+
+# add representative amplicon sequence to observation metadata
+#create command
+cmd='
+awk '\''BEGIN{print("#OTU\ttotal\tamplicon\tsequence")}
+NR==FNR{a[$3]=$1;b[$3]=$2;c[$3]=$3;next}
+(substr($0,2,index($0,"_")-2) in c)
+{printf(a[substr($0,2,index($0,"_")-2)]"\t"b[substr($0,2,index($0,"_")-2)]"\t"c[substr($0,2,index($0,"_")-2)]"\t");
+getline; printf $1"\n"}'\'' ${PROJECT_ID}"_observation_metadata.map" swarm.seeds.no.singletons
+> ${PROJECT_ID}"_observation_metadata_full.map"'
+#execute command
+eval $cmd
+#print command to command trace file
+echo -e "\n#add representative amplicon sequence to observation metadata:" >> q-zip_seq_of_coms.txt
+echo $cmd >> q-zip_seq_of_coms.txt
+
+# convert pure OTU table + taxonomy to biom format
+#create command
+cmd='
+biom convert -i ${PROJECT_ID}"_OTU_table_pure.csv" -o ${PROJECT_ID}"_OTU_table_pure.biom" --to-hdf5'
+#execute command
+eval $cmd
+#print command to command trace file
+echo -e "\n#convert pure OTU table + taxonomy to biom format:" >> q-zip_seq_of_coms.txt
+echo $cmd >> q-zip_seq_of_coms.txt
 
 
-#done
+# add external sample meta data to biom if provided
+#create command
+cmd='
+if [ -s ${ADD_METADATA_FILE} ]; 
+then biom add-metadata -i ${PROJECT_ID}"_OTU_table_pure.biom" -o ${PROJECT_ID}"_OTU_table_add_hdf5.biom" --sample-metadata-fp ${ADD_METADATA_FILE}; fi;
+if [ ! -s ${PROJECT_ID}"_OTU_table_add_hdf5.biom" ];
+then mv ${PROJECT_ID}"_OTU_table_pure.biom" ${PROJECT_ID}"_OTU_table_add_hdf5.biom"; fi'
+#execute command
+eval $cmd
+#print command to command trace file
+echo -e "\n#add external sample meta data to biom if provided:" >> q-zip_seq_of_coms.txt
+echo $cmd >> q-zip_seq_of_coms.txt
+
+#add sample meta data from raw file map and observation meta data
+#create command
+cmd='
+biom add-metadata -i ${PROJECT_ID}"_OTU_table_add_hdf5.biom" -o ${PROJECT_ID}"_OTU_table_full_hdf5.biom" --observation-metadata-fp  ${PROJECT_ID}"_observation_metadata_full.map" --sample-metadata-fp ${PROJECT_ID}"_sample_metadata.map"'
+#execute command
+eval $cmd
+#print command to command trace file
+echo -e "\n#add sample meta data from raw file map and observation meta data:" >> q-zip_seq_of_coms.txt
+echo $cmd >> q-zip_seq_of_coms.txt
+
+
+# convert from hdf5 to json format
+#create command
+cmd='
+biom convert -i ${PROJECT_ID}"_OTU_table_full_hdf5.biom" -o ${PROJECT_ID}"_OTU_table_full_json.biom" --to-json'
+#execute command
+eval $cmd
+#print command to command trace file
+echo -e "\n#convert from hdf5 to json format:" >> q-zip_seq_of_coms.txt
+echo $cmd >> q-zip_seq_of_coms.txt
+
+
+# clean from SAMPLE_PREFIX and SAMPLE_SUFFIX
+# create command
+cmd='
+if [ "$SAMPLE_PREFIX_REGEXP" == "" ]; then SAMPLE_PREFIX_REGEXP=`date +%s%N | md5sum | cut -f1 -d " "`; fi;
+if [ "$SAMPLE_SUFFIX_REGEXP" == "" ]; then SAMPLE_SUFFIX_REGEXP=`date +%s%N | md5sum | cut -f1 -d " "`; fi;
+cat ${PROJECT_ID}"_OTU_table_full_json.biom" |
+awk '\''{print gensub(/"id": "'${SAMPLE_PREFIX_REGEXP}'/,"\"id\": \"","g",$0)}'\'' |
+awk '\''{print gensub(/'${SAMPLE_SUFFIX_REGEXP}'"/,"\"","g",$0)}'\''
+> ${PROJECT_ID}"_OTU_table_full_json_clean.biom"'
+#execute command
+eval $cmd
+#print command to command trace file
+echo -e "\n#clean from SAMPLE_PREFIX and SAMPLE_SUFFIX:" >> q-zip_seq_of_coms.txt
+echo $cmd >> q-zip_seq_of_coms.txt
+
+# convert back from json to hdf5 format
+#create command
+cmd='
+biom convert -i ${PROJECT_ID}"_OTU_table_full_json_clean.biom" -o ${PROJECT_ID}"_OTU_table_full_hdf5_clean.biom" --to-hdf5'
+#execute command
+eval $cmd
+#print command to command trace file
+echo -e "\n#convert back from json to hdf5 format:" >> q-zip_seq_of_coms.txt
+echo $cmd >> q-zip_seq_of_coms.txt
+
+
+# analysis done
 
 
 ## TIMES
