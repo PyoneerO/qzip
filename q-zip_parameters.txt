@@ -74,8 +74,8 @@ FASTQ_MAXEE="1"
 #number ambiguities allowed
 FASTQ_MAXNS="0"
 #length filter
-FASTQ_MINLEN="50" #FASTQ_MAXLEN = AVGLEN + AVGLENRADIUS #feature filter
-FASTQ_MAXLEN="600" #FASTQ_MINLEN = AVGLEN - AVGLENRADIUS #feature filter
+FASTQ_MINLEN="200" #FASTQ_MAXLEN = AVGLEN + AVGLENRADIUS #feature filter
+FASTQ_MAXLEN="500" #FASTQ_MINLEN = AVGLEN - AVGLENRADIUS #feature filter
 #AVGLENRADIUS="50" #use this setting only if you do not expect high variation of target length
 #feature filter; used to define FASTQ_MAXLEN and FASTQ_MINLEN as AVGLENRADIUS-distant from sample average sequence length
 #feature filter

@@ -65,18 +65,19 @@ fi
 
 ## CLEAN AND CREATE NEEDED DIRECTORIES
 rm -rf ${LOG_FP} ${RESULTS_DIR} ${S_STRUCT} ${S_STATS} ${S_SEEDS}* ${S_SWARM} ${PROJECT_NAME}*".map" \
-*"trimmed"* "waste" "full_set_dereplicated.fasta" "seq_number_stats.txt" *"wang"* q-zip_seq_of_coms.txt  \
+*"trimmed"* *OTU_table* "full_set_dereplicated.fasta" "seq_number_stats.txt" *"wang"* q-zip_seq_of_coms.txt  \
 `basename ${OTU_TABLE} .csv`* ${AMPLICON_TABLE} ${REF_USED_FP}
 mkdir ${LOG_FP} ${RESULTS_DIR} ${REF_USED_FP}
-#if [ ! -e ${REF_USED_FP} ]; then mkdir ${REF_USED_FP}; fi
-#if [ ${REUSE_REF_SEQS} == "NO" ]; then rm -r ${REF_USED_FP}; mkdir ${REF_USED_FP}; fi
+#if [ ! -e "${REF_USED_FP}" ]; then mkdir ${REF_USED_FP}; fi
+#if [ "${REUSE_REF_SEQS}" == "NO" ]; then rm -r ${REF_USED_FP}; mkdir ${REF_USED_FP}; fi
 touch q-zip_seq_of_coms.txt
 
 ## PREPARE REPRODUCIBILITY VIA TRACE FILE
-echo "#Sequence of commands for current project:" > q-zip_seq_of_coms.txt
-echo "PROJECT_ID="$PROJECT_ID >> q-zip_seq_of_coms.txt
+echo "#PROJECT ID: "${PROJECT_ID} >> q-zip_seq_of_coms.txt
 echo -e "\n#source parameter" >> q-zip_seq_of_coms.txt
 echo ". ./q-zip_parameters.txt" >> q-zip_seq_of_coms.txt
+echo -e "\n#Sequence of commands for current project:" >> q-zip_seq_of_coms.txt
+echo "PROJECT_ID="$PROJECT_ID >> q-zip_seq_of_coms.txt
 echo -e "\n#create needed directory for reference sequences" >> q-zip_seq_of_coms.txt
 echo "mkdir "${REF_USED_FP} >> q-zip_seq_of_coms.txt
 
@@ -137,7 +138,7 @@ cat ${PROJECT_ID}*".map" | while read a b c ; do if [ -s $a.trimmed.R1 ]; then g
 ## MERGE PAIRED ENDS
 #create command
 cmd='ls -S1 . | grep "trimmed.R1" |
-parallel -j ${THREADS} ${VSEARCH}" --fastq_mergepairs {} --reverse {.}'.R2' --fastq_allowmergestagger --threads 1 --fasta_width 0 --fastq_maxdiffs "${FASTQ_MAXDIFFS}" --fastq_minovlen "${FASTQ_MINOVLEN}" --fastqout {.}.assembled.fastq"'
+parallel -j ${THREADS} ${VSEARCH}" --fastq_mergepairs {} --reverse {.}'.R2' --log - --fastq_allowmergestagger --threads 1 --fasta_width 0 --fastq_maxdiffs "${FASTQ_MAXDIFFS}" --fastq_minovlen "${FASTQ_MINOVLEN}" --fastqout {.}.assembled.fastq"'
 #execute command
 eval $cmd
 #write sequence of commands to record file
@@ -152,7 +153,7 @@ cat ${PROJECT_ID}*".map" | while read a b c ; do if [ -s $a.trimmed.assembled.fa
 ## CREATE REVERSE COMPLEMENTED SEQUENCES
 #create command
 cmd='ls -S1 . | grep ".assembled.fastq" |
-parallel -j ${THREADS} ${VSEARCH}" --fastx_revcomp {} --threads 1 --fastq_ascii 33 --fasta_width 0 --fastqout {.}.revcomp.fastq"'
+parallel -j ${THREADS} ${VSEARCH}" --fastx_revcomp {} --threads 1 --fastq_ascii 33 --fasta_width 0 --log - --fastqout {.}.revcomp.fastq"'
 #execute command
 eval $cmd
 #write sequence of commands to record file
@@ -194,7 +195,7 @@ cat ${PROJECT_ID}*".map" | while read a b c ; do if [ -s $a.trimmed.assembled.bo
 ## FEATURE FILTERING AND SHA1-RELABELing
 #create command
 cmd='ls -S1 | grep "primer_cut.fastq" |
-parallel -j ${THREADS} ${VSEARCH}" --threads 1 --fastq_ascii 33 --fasta_width 0 --fastx_filter {} --fastq_maxee "${FASTQ_MAXEE}" --fastq_maxlen "${FASTQ_MAXLEN}" --fastq_minlen "${FASTQ_MINLEN}" --fastq_maxns "${FASTQ_MAXNS}" --relabel_sha1 --relabel_keep --fastqout {.}.feature_filtered.fastq"'
+parallel -j ${THREADS} ${VSEARCH}" --threads 1 --fastq_ascii 33 --log - --fasta_width 0 --fastx_filter {} --fastq_maxee "${FASTQ_MAXEE}" --fastq_maxlen "${FASTQ_MAXLEN}" --fastq_minlen "${FASTQ_MINLEN}" --fastq_maxns "${FASTQ_MAXNS}" --relabel_sha1 --relabel_keep --fastqout {.}.feature_filtered.fastq"'
 #execute command
 eval $cmd
 #write sequence of commands to record file
@@ -221,7 +222,7 @@ cat ${PROJECT_ID}*".map" | while read a b c ; do if [ -s $a.trimmed.assembled.bo
 ## DEREPLICATION ON SAMPLE LEVEL
 #create command
 cmd='ls -S1 | grep "feature_filtered.fastq" |
-parallel -j ${THREADS} ${VSEARCH}" --derep_fulllength {} --threads 1 --fasta_width 0 --relabel_sha1 --sizeout --output {.}.derep.fasta"'
+parallel -j ${THREADS} ${VSEARCH}" --derep_fulllength {} --threads 1 --log - --fasta_width 0 --relabel_sha1 --sizeout --output {.}.derep.fasta"'
 #execute command
 eval $cmd
 #write sequence of commands to record file
@@ -238,7 +239,7 @@ if [ ${DEBUG} == "NO" ]; then rm *feature_filtered.fastq; fi
 #Detect chimera
 # create command
 cmd='ls -1S | grep "derep.fasta" |
-parallel -j ${THREADS} ${VSEARCH}" --fasta_width 0 --threads 1 --uchime_denovo {} --fasta_score --chimeras {.}.chimeras_denovo.fasta"'
+parallel -j ${THREADS} ${VSEARCH}" --fasta_width 0 --threads 1 --log - --log - --uchime_denovo {} --fasta_score --chimeras {.}.chimeras_denovo.fasta"'
 #execute command
 eval $cmd
 #write sequence of commands to record file
@@ -297,10 +298,10 @@ echo "yes"; else echo "no"; fi; done >> seq_number_stats.interm
 #create command
 #cmd='cat *.non_chimeras_denovo.fasta | ${VSEARCH} --threads ${THREADS} --derep_fulllength - --sizein --sizeout --fasta_width 0 --output full_set_dereplicated.fasta'
 cmd='cat *.non_chimeras_denovo.fasta |
-${VSEARCH} --threads ${THREADS} --derep_fulllength - --sizein --sizeout --fasta_width 0 --output - |
+${VSEARCH} --threads ${THREADS} --derep_fulllength - --sizein --sizeout --log full_derep.log --fasta_width 0 --output - |
 sed '\''s/;size=/_/; s/;$//'\'' > full_set_dereplicated.fasta'
 #execute command
-eval $cmd
+eval $cmd; cat full_derep.log
 #write command to command trace file
 echo -e "\n#Dereplicate full study + adjust abundance information:" >> q-zip_seq_of_coms.txt
 echo $cmd >> q-zip_seq_of_coms.txt
@@ -544,7 +545,7 @@ echo $cmd >> q-zip_seq_of_coms.txt
 # add external sample meta data to biom if provided
 #create command
 cmd='
-if [ -s ${ADD_METADATA_FILE} ]; 
+if [ -s "${ADD_METADATA_FILE}" ]; 
 then biom add-metadata -i ${PROJECT_ID}"_OTU_table_pure.biom" -o ${PROJECT_ID}"_OTU_table_add_hdf5.biom" --sample-metadata-fp ${ADD_METADATA_FILE}; fi;
 if [ ! -s ${PROJECT_ID}"_OTU_table_add_hdf5.biom" ];
 then mv ${PROJECT_ID}"_OTU_table_pure.biom" ${PROJECT_ID}"_OTU_table_add_hdf5.biom"; fi'
@@ -584,7 +585,12 @@ if [ "$SAMPLE_SUFFIX_REGEXP" == "" ]; then SAMPLE_SUFFIX_REGEXP=`date +%s%N | md
 cat ${PROJECT_ID}"_OTU_table_full_json.biom" |
 awk '\''{print gensub(/"id": "'${SAMPLE_PREFIX_REGEXP}'/,"\"id\": \"","g",$0)}'\'' |
 awk '\''{print gensub(/'${SAMPLE_SUFFIX_REGEXP}'"/,"\"","g",$0)}'\''
-> ${PROJECT_ID}"_OTU_table_full_json_clean.biom"'
+> ${PROJECT_ID}"_OTU_table_full_json_clean.biom";
+cat ${PROJECT_ID}_OTU_table_pure.csv |
+awk '\''{print gensub(/\t'${SAMPLE_PREFIX_REGEXP}'/,"\t","g",$0)}'\'' |
+awk '\''{print gensub(/'${SAMPLE_SUFFIX_REGEXP}'\t/,"\t","g",$0)}'\''
+> ${PROJECT_ID}_OTU_table_pure_clean.csv'
+
 #execute command
 eval $cmd
 #print command to command trace file
@@ -698,25 +704,18 @@ Sample meta data</td><td style="width: 221px;"><a href='${PROJECT_ID}.map'>'${PR
 
 
 
-ln -s ../seq_number_stats.txt ../q-zip_workflow.log ../q-zip_commands.sh ../q-zip_parameters.txt ../q-zip_index.html \
-../${AMPLICON_TABLE} ../${S_SEEDS}".no.singletons" ../${S_SWARM}".no.singletons" ../${LOG_FP} ../${PROJECT_ID}".map" ./${RESULTS_DIR}
+ln -s ../seq_number_stats.txt ../q-zip_workflow.log ../q-zip_commands.sh ../q-zip_parameters.txt ../q-zip_index.html ../q-zip_seq_of_coms.txt \
+../${AMPLICON_TABLE} ../${S_SEEDS}".no.singletons" ../${S_SWARM}".no.singletons" ../${LOG_FP} \
+../${PROJECT_ID}"_sample_metadata.map" ../${ADD_METADATA_FILE} ../${PROJECT_ID}"_observation_metadata_full.map" \
+../${PROJECT_ID}"_OTU_table_pure_clean.csv" ../${PROJECT_ID}"_OTU_table_full_json_clean.biom" ../${PROJECT_ID}"_OTU_table_full_hdf5_clean.biom" \
+./${RESULTS_DIR}
 
+ln -s ../${REF_USED_FP}"/"${REF_DBS}"_"${FORWARDPRIMER}"_"${REVERSEPRIMER_RC}"_"${PRIMER_MISMATCH_REF}"_"${lenFP_CUT_REF}"_"${lenRP_CUT_REF}".fasta" ./${RESULTS_DIR}
+ln -s ../${REF_USED_FP}"/"${REF_DBS}"_"${FORWARDPRIMER}"_"${REVERSEPRIMER_RC}"_"${PRIMER_MISMATCH_REF}"_"${lenFP_CUT_REF}"_"${lenRP_CUT_REF}".tax" ./${RESULTS_DIR}
+#ln -s ../../${REF_USED_FP}"/"${REF_DBS}"_"${FORWARDPRIMER}"_"${REVERSEPRIMER_RC}"_"${PRIMER_MISMATCH_REF}"_"${lenFP_CUT_REF}"_"${lenRP_CUT_REF}".fasta" ./${RESULTS_DIR}/${REF_USED_FP}
+#ln -s ../../${REF_USED_FP}"/"${REF_DBS}"_"${FORWARDPRIMER}"_"${REVERSEPRIMER_RC}"_"${PRIMER_MISMATCH_REF}"_"${lenFP_CUT_REF}"_"${lenRP_CUT_REF}".tax" ./${RESULTS_DIR}/${REF_USED_FP}
 
-#for i in `basename ${OTU_TABLE} .csv`"_"\*; do ln -s ../$i ./${RESULTS_DIR}/; done
-for i in ${REF_DBS}; do otu_name=`basename ${OTU_TABLE} .csv`"_"$i".csv"; \
-ln -s ../$otu_name ./${RESULTS_DIR}/$otu_name; done
-
-
-mkdir ./${RESULTS_DIR}/${REF_USED_FP}
-
-for i in ${REF_DBS}; do \
-ln -s ../../${REF_USED_FP}"/"$i"_"${FORWARDPRIMER}"_"${REVERSEPRIMER_RC}"_"${PRIMER_MISMATCH_REF}"_"${lenFP_CUT_REF}"_"${lenRP_CUT_REF}".fasta" ./${RESULTS_DIR}/${REF_USED_FP}
-ln -s ../../${REF_USED_FP}"/"$i"_"${FORWARDPRIMER}"_"${REVERSEPRIMER_RC}"_"${PRIMER_MISMATCH_REF}"_"${lenFP_CUT_REF}"_"${lenRP_CUT_REF}".tax" ./${RESULTS_DIR}/${REF_USED_FP}
-done
-
-
-
-zip -r -m ${RESULTS_DIR}"/"`basename ${REF_USED_FP}`".zip" ${RESULTS_DIR}"/"${REF_USED_FP}/
+zip -r -j -m ${RESULTS_DIR}"/"`basename ${REF_USED_FP}`".zip" ${RESULTS_DIR}"/"${REF_DBS}*
 zip -r -m ${RESULTS_DIR}"/"${AMPLICON_TABLE}".zip" ${RESULTS_DIR}"/"${AMPLICON_TABLE}
 zip -r -m ${RESULTS_DIR}"/"${S_SWARM}".no.singletons.zip" ${RESULTS_DIR}"/"${S_SWARM}".no.singletons"
 
