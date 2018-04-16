@@ -1,0 +1,56 @@
+prerequisites:
+- biom 2.1.5
+- trimmomatic 0.35
+- cutadapt 1.9
+- swarm 2.1.8
+- vsearch 2.3.0
+- mothur 1.38.1.1
+- parallel 20130922
+
+installing:
+git clone https://github.com/PyoneerO/qzip
+copy q-zip_commands.sh and q-zip_parameters.txt into your working directory.
+
+input:
+- demultiplexed Miseq paired-end raw data
+- sample metadata file (optional)
+
+naming scheme:
+exemplary raw file name
+<sequencing date>_<machine id><run id><sample id><well id/alternative sample id><lane id><read id>_001.fastq.gz
+180201_M00758_0705_lane1nifh10_S39_L001_R1_001.fastq.gz
+
+the sample names for your sample metadata mapping require the following scheme 
+(according to the corresponding raw sequence files without the segment "_<lane id><read id>_001.fastq.gz"):
+
+<sample id> (lane1nifh10) or
+<sample id><well id/alternative sample id> (lane1nifh10_S39) or
+<sequencing date>_<machine id><run id><sample id><well id/alternative sample id> (80201_M00758_0705_lane1nifh10_S39)
+
+If you provide regular expressions for Prefix (<sequencing date>_<machine id><run id>_) and Suffix 
+(_<well id/alternative sample id>) in the parameter file, the sample names in the OTU tables will be cleaned from them.
+
+parameter:
+open the file q-zip_parameters.txt with an editor and set parameters especially for:
+- primer sequences
+- reference sets
+- paths to the needed executables
+
+workflow execution:
+simply source the script by . ./q-zip_commands.sh
+
+output:
+q-zip_commands.sh - used workflow file
+q-zip_parameters.txt - used parameter file
+q-zip_seq_of_coms.txt - sequence of used commands, sourcing of this file should result produce reproducible results
+q-zip_workflow.log - log file
+refDB.zip - primer filtered and trimmed reference set
+seq_number_stats.txt - sequence number and length statistics for the preprocessing steps
+amplicon_table.csv - distribution table of amplicons in samples
+swarm.seeds.no.singletons - swarm/OTU representing sequences (singleton removal applied by default!)
+swarm.swarm.no.singletons - list of amplicons per swarm/OTU (singleton removal applied by default!)
+<project id>_observation_metadata_full.map - OTU/observation metadata
+<project id>_sample_metadata.map - sample metadata
+<project id>_OTU_table_full_json_clean.biom - OTU table as biom, json format, all provided metadata included
+<project id>_OTU_table_full_hdf5_clean.biom - OTU table as biom, hdf5 format, all provided metadata included
+<project id>_9_OTU_table_pure_clean.csv - OTU table + taxonomie as csv
