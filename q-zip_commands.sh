@@ -126,7 +126,7 @@ cat ${PROJECT_ID}*".map" | cut -f2 | parallel -j ${THREADS} -k "if [ -s {} ]; th
 ## QUAL TRIM SEQUENCES
 # create command
 cmd='cut -f 1 ${PROJECT_ID}".map" |  grep -v "^#" |tr "." "_" |
-parallel -j ${THREADS} ${TRIMMOMATIC}" PE -phred33 {}_L001_R1_001.fastq* {}_L001_R2_001.fastq* {.}.trimmed.R1 /dev/null {.}.trimmed.R2 /dev/null SLIDINGWINDOW:"${SLIDINGWINDOW}'
+parallel -j ${THREADS} ${TRIMMOMATIC}" PE -phred33 {}_L001_R1_001.fastq* {}_L001_R2_001.fastq* {.}.trimmed.R1 /dev/null {.}.trimmed.R2 /dev/null CROP:"${CROP}" SLIDINGWINDOW:"${SLIDINGWINDOW}'
 #execute command
 eval $cmd
 #write sequence of commands to record file
