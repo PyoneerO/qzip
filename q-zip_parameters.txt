@@ -17,7 +17,7 @@ ADD_METADATA_FILE="add_sample_metadata.txt"
 
 # REFERENCE SETTINGS
 REF_RAW_PATH="/scratch2/db/q_zip_dbs/"
-REF_DBS="nifH_arb_2014"
+REF_DBS=""
 #[silva_ref_v128_full_Euk silva_nr_v128_full_Euk silva_nr_v123_1_full_Euk pr2_gb203_v4_5 silva_nr_v128_full_Pros nifH_arb_2014]
 # mothur issue: please only use AlNum [A-Z,a-z,0-9] and underscore "_" in names for ref_dbs 
 # ILLUMINACLIP_FP="/scratch2/sneuhaus/bin/Trimmomatic-0.35/adapters/NexteraPE-PE.fa"
@@ -55,13 +55,14 @@ MIN_PRIMER_OVERLAP_FRAC_REF="75/100"
 # TRIMMOMATIC
 #ILLUMINACLIP_PATTERN="2:30:10:3:TRUE"
 SLIDINGWINDOW="3:8"
+CROP="250"
 
 # VSEARCH merge/assemble paired-ends
 FASTQ_MAXDIFFS="5"
 FASTQ_MINOVLEN="50"
 
 # PEAR merge/assemble paired-ends
-FASTQ_MINOVLEN="20"
+#FASTQ_MINOVLEN="20"
 
 # CUTADAPT PRIMER FILTER AND TRIM OF QUERIES
 PRIMER_MISMATCH="0"
