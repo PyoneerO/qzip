@@ -39,8 +39,8 @@ LOG_FP="./logs/"
 RESULTS_DIR="./results"
 
 # OLIGOS
-FORWARDPRIMER="TGYGAYCCNAARGCNGA"
-REVERSEPRIMER="ADNGCCATCATYTCNCC"
+FORWARDPRIMER=""
+REVERSEPRIMER=""
 
 # PREPARE REFS
 # reuse reference sequences if prepared in a former run
