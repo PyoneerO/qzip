@@ -1,11 +1,13 @@
 prerequisites:
-- biom 2.1.5
-- trimmomatic 0.35
-- cutadapt 1.9
-- swarm 2.1.8
-- vsearch 2.3.0
-- mothur 1.38.1.1
-- parallel 20130922
+- biom 2.1.6
+- trimmomatic 0.38
+- cutadapt 1.17
+- swarm 2.2.2
+- vsearch 2.8.2
+- mothur 1.40.5
+- parallel 20141022
+- mafft
+- RaxML
 
 installing:
 git clone https://github.com/PyoneerO/qzip
