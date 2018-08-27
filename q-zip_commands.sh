@@ -39,11 +39,9 @@ which ${FASTQC} > /dev/null; if [ $? -ne 0 ]; then echo "FASTQC not found; exit"
 which ${TRIMMOMATIC}  > /dev/null; if [ $? -ne 0 ]; then echo "TRIMMOMATIC not found; exit"; exit 1; else echo "TRIMMOMATIC found"; fi
 which ${CUTADAPT} > /dev/null; if [ $? -ne 0 ]; then echo "CUTADAPT not found; exit"; exit 1; else echo "CUTADAPT found"; fi
 which ${SWARM} > /dev/null; if [ $? -ne 0 ]; then echo "SWARM not found; exit"; exit 1; else echo "SWARM found"; fi
-which ${PEAR} > /dev/null; if [ $? -ne 0 ]; then echo "PEAR not found; exit"; exit 1; else echo "PEAR found"; fi
 which ${VSEARCH} > /dev/null; if [ $? -ne 0 ]; then echo "VSEARCH not found; exit"; exit 1; else echo "VSEARCH found"; fi
 which ${MOTHUR} > /dev/null; if [ $? -ne 0 ]; then echo "MOTHUR not found; exit"; exit 1; else echo "MOTHUR found"; fi
 which ${BIOM} > /dev/null; if [ $? -ne 0 ]; then echo "BIOM-format not found; exit"; exit 1; else echo "BIOM-format found"; fi
-#which ${MULTIQC} > /dev/null; if [ $? -ne 0 ]; then echo "MultiQC not found; exit"; exit 1; else echo "MultiQC found"; fi
 which parallel > /dev/null; if [ $? -ne 0 ]; then echo "GNU PARALLEL not found; exit"; exit 1; else echo "GNU PARALLEL found"; fi
 
 echo "Check max number of open file desriptors"
@@ -126,7 +124,7 @@ cat ${PROJECT_ID}*".map" | cut -f2 | parallel -j ${THREADS} -k "if [ -s {} ]; th
 ## QUAL TRIM SEQUENCES
 # create command
 cmd='cut -f 1 ${PROJECT_ID}".map" |  grep -v "^#" |tr "." "_" |
-parallel -j ${THREADS} ${TRIMMOMATIC}" PE -phred33 {}_L001_R1_001.fastq* {}_L001_R2_001.fastq* {.}.trimmed.R1 /dev/null {.}.trimmed.R2 /dev/null CROP:"${CROP}" SLIDINGWINDOW:"${SLIDINGWINDOW}'
+parallel -j ${THREADS} java -jar ${TRIMMOMATIC}" PE -phred33 {}_L001_R1_001.fastq* {}_L001_R2_001.fastq* {.}.trimmed.R1 /dev/null {.}.trimmed.R2 /dev/null CROP:"${CROP}" SLIDINGWINDOW:"${SLIDINGWINDOW}'
 #execute command
 eval $cmd
 #write sequence of commands to record file

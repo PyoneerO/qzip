@@ -7,47 +7,45 @@ PI_NAMES="Test_PI"
 PROJECT_NAME="Test_project"
 TARGET_MOLECULE="Test_molecule"
 TARGET_REGION="Test_region"
-THREADS="40"
+THREADS="10"
 #[1:max#cores]
-DEBUG="YES"
+DEBUG="NO"
 #[YES NO]; NO removes intermediate sequence files if not used anymore
 ADD_METADATA_FILE="add_sample_metadata.txt"
 # additional sample metadata to be merged in the biom file (OTU table + taxonomy + other run-related metadata)
 # tab-delimited + header (first line beginning with #)
 
 # REFERENCE SETTINGS
-REF_RAW_PATH="/scratch2/db/q_zip_dbs/"
-REF_DBS=""
+REF_RAW_PATH="/scratch/common/references/"
+REF_DBS="silva_nr_v132"
 #[silva_ref_v128_full_Euk silva_nr_v128_full_Euk silva_nr_v123_1_full_Euk pr2_gb203_v4_5 silva_nr_v128_full_Pros nifH_arb_2014]
 # mothur issue: please only use AlNum [A-Z,a-z,0-9] and underscore "_" in names for ref_dbs 
 # ILLUMINACLIP_FP="/scratch2/sneuhaus/bin/Trimmomatic-0.35/adapters/NexteraPE-PE.fa"
 
 # BINARY LOCATIONS
-BINDIR="/scratch2/sneuhaus/bin/"
-CUTADAPT=${BINDIR}"/cutadapt"
-TRIMMOMATIC=${BINDIR}"/trimmomatic"
-VSEARCH=${BINDIR}"/vsearch"
-SWARM=${BINDIR}"/swarm"
-MOTHUR=${BINDIR}"/mothur"
-FASTQC=${BINDIR}"/fastqc"
-PEAR=${BINDIR}"/pear"
-BIOM="biom"
+BINDIR="/scratch/stefan.neuhaus_172.16.5.52/tools/bin"
+CUTADAPT=cutadapt
+TRIMMOMATIC=${BINDIR}/trimmomatic
+VSEARCH=${BINDIR}/vsearch
+SWARM=${BINDIR}/swarm
+MOTHUR=${BINDIR}/mothur
+FASTQC=${BINDIR}/fastqc
+BIOM=biom
 
 # DIRECTORY SETTINGS
 REF_USED_FP="./refDB/"
-LOG_FP="./logs/"
 RESULTS_DIR="./results"
 
 # OLIGOS
-FORWARDPRIMER=""
-REVERSEPRIMER=""
+FORWARDPRIMER="TGCCTCCCGTAGGAGT"
+REVERSEPRIMER="AGAGTTTGATCCTGGCTCAG"
 
 # PREPARE REFS
 # reuse reference sequences if prepared in a former run
 #REUSE_REF_SEQS=NO
 # cutadapt filter (reference sequence length + primer found)
 MIN_LEN_REF=200
-MAX_LEN_REF=550
+MAX_LEN_REF=450
 PRIMER_MISMATCH_REF="0.1"
 MIN_PRIMER_OVERLAP_FRAC_REF="75/100"
 # value as fraction
@@ -55,14 +53,12 @@ MIN_PRIMER_OVERLAP_FRAC_REF="75/100"
 # TRIMMOMATIC
 #ILLUMINACLIP_PATTERN="2:30:10:3:TRUE"
 SLIDINGWINDOW="3:8"
-CROP="250"
+CROP="275"
 
 # VSEARCH merge/assemble paired-ends
 FASTQ_MAXDIFFS="5"
 FASTQ_MINOVLEN="50"
 
-# PEAR merge/assemble paired-ends
-#FASTQ_MINOVLEN="20"
 
 # CUTADAPT PRIMER FILTER AND TRIM OF QUERIES
 PRIMER_MISMATCH="0"
@@ -76,13 +72,13 @@ FASTQ_MAXEE="1"
 FASTQ_MAXNS="0"
 #length filter
 FASTQ_MINLEN="200" #FASTQ_MAXLEN = AVGLEN + AVGLENRADIUS #feature filter
-FASTQ_MAXLEN="500" #FASTQ_MINLEN = AVGLEN - AVGLENRADIUS #feature filter
+FASTQ_MAXLEN="450" #FASTQ_MINLEN = AVGLEN - AVGLENRADIUS #feature filter
 #AVGLENRADIUS="50" #use this setting only if you do not expect high variation of target length
 #feature filter; used to define FASTQ_MAXLEN and FASTQ_MINLEN as AVGLENRADIUS-distant from sample average sequence length
 #feature filter
 
 # Min sample size filter to feed swarm
-MIN_SAMPLE_SIZE=5000
+MIN_SAMPLE_SIZE=10000
 
 ## SUBSAMPLING FOR FASTQC REPORTS
 # not yet implemented
