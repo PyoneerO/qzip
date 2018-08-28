@@ -46,14 +46,14 @@ which parallel > /dev/null; if [ $? -ne 0 ]; then echo "GNU PARALLEL not found; 
 
 echo "Check max number of open file desriptors"
 ### EXIT IF NUMBER OF FILES EXCEED MAX NUMBER OF OPEN FILE DESCRIPTORS
-if [[ `ulimit -n` -lt `ls -l1 | grep -c _R1_001.fastq.gz` ]]; then
+if [[ `ulimit -n` -lt `ls -l1 | grep -c _R1_001.fastq*` ]]; then
 	echo "ERROR: max number of open file descriptors smaller than number of samples"
-	echo `ulimit -n` "<" `ls -l1 | grep -c _R1_001.fastq.gz`
-	echo "Please ask your sys admin to increase the number to be at least "`ls -l1 | grep -c _R1_001.fastq.gz`
+	echo `ulimit -n` "<" `ls -l1 | grep -c _R1_001.fastq*`
+	echo "Please ask your sys admin to increase the number to be at least "`ls -l1 | grep -c _R1_001.fastq*`
 	exit 1
 else
 	echo "OK: max number of open file descriptors greater than number of samples"
-	echo `ulimit -n` ">" `ls -l1 | grep -c _R1_001.fastq.gz`
+	echo `ulimit -n` ">" `ls -l1 | grep -c _R1_001.fastq*`
 fi
 
 ################
@@ -64,7 +64,7 @@ fi
 ## CLEAN AND CREATE NEEDED DIRECTORIES
 rm -rf ${LOG_FP} ${RESULTS_DIR} ${S_STRUCT} ${S_STATS} ${S_SEEDS}* ${S_SWARM} ${PROJECT_NAME}*".map" \
 *"trimmed"* *OTU_table* "full_set_dereplicated.fasta" "seq_number_stats.txt" *"wang"* q-zip_seq_of_coms.txt  \
-`basename ${OTU_TABLE} .csv`* ${AMPLICON_TABLE} ${REF_USED_FP}
+`basename ${OTU_TABLE} .csv`* ${AMPLICON_TABLE} ${REF_USED_FP} ${REF_USED_FP}
 mkdir ${LOG_FP} ${RESULTS_DIR} ${REF_USED_FP}
 #if [ ! -e "${REF_USED_FP}" ]; then mkdir ${REF_USED_FP}; fi
 #if [ "${REUSE_REF_SEQS}" == "NO" ]; then rm -r ${REF_USED_FP}; mkdir ${REF_USED_FP}; fi

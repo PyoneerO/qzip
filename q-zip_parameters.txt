@@ -7,7 +7,7 @@ PI_NAMES="Test_PI"
 PROJECT_NAME="Test_project"
 TARGET_MOLECULE="Test_molecule"
 TARGET_REGION="Test_region"
-THREADS="10"
+THREADS="15"
 #[1:max#cores]
 DEBUG="NO"
 #[YES NO]; NO removes intermediate sequence files if not used anymore
@@ -24,12 +24,12 @@ REF_DBS="silva_nr_v132"
 
 # BINARY LOCATIONS
 BINDIR="/scratch/stefan.neuhaus_172.16.5.52/tools/bin"
-CUTADAPT=cutadapt
 TRIMMOMATIC=${BINDIR}/trimmomatic
 VSEARCH=${BINDIR}/vsearch
 SWARM=${BINDIR}/swarm
 MOTHUR=${BINDIR}/mothur
 FASTQC=${BINDIR}/fastqc
+CUTADAPT=cutadapt
 BIOM=biom
 
 # DIRECTORY SETTINGS
@@ -37,8 +37,8 @@ REF_USED_FP="./refDB/"
 RESULTS_DIR="./results"
 
 # OLIGOS
-FORWARDPRIMER="TGCCTCCCGTAGGAGT"
-REVERSEPRIMER="AGAGTTTGATCCTGGCTCAG"
+FORWARDPRIMER="CCAGCASCYGCGGTAATTCC"
+REVERSEPRIMER="ACTTTCGTTCTTGAT"
 
 # PREPARE REFS
 # reuse reference sequences if prepared in a former run
@@ -78,7 +78,7 @@ FASTQ_MAXLEN="450" #FASTQ_MINLEN = AVGLEN - AVGLENRADIUS #feature filter
 #feature filter
 
 # Min sample size filter to feed swarm
-MIN_SAMPLE_SIZE=10000
+MIN_SAMPLE_SIZE=1000
 
 ## SUBSAMPLING FOR FASTQC REPORTS
 # not yet implemented
