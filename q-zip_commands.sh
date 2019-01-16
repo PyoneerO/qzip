@@ -608,8 +608,6 @@ echo $cmd >> q-zip_seq_of_coms.txt
 # add observation meta data to OTU table (csv)
 #create command
 cmd='
-echo -e `head -1 ${PROJECT_ID}"_OTU_table_pure_clean.csv"`"\t"`head -1 ${PROJECT_ID}"_observation_metadata_full.map" | awk '\''{printf($2"\t"$3"\t"$4)}'\''`
-> ${PROJECT_ID}_OTU_table_pure_clean_full.csv;
 awk '\''FNR==NR{a[$1]=$2"\t"$3"\t"$4; next}($1 in a){printf $0"\t"a[$1]"\n"}'\''
 ${PROJECT_ID}_observation_metadata_full.map 
 ${PROJECT_ID}_OTU_table_pure_clean.csv 
@@ -722,7 +720,7 @@ Sample meta data</td><td style="width: 221px;"><a href='${PROJECT_ID}.map'>'${PR
 ln -s ../seq_number_stats.txt ../q-zip_workflow.log ../q-zip_commands.sh ../q-zip_parameters.txt ../q-zip_index.html ../q-zip_seq_of_coms.txt \
 ../${AMPLICON_TABLE} ../${S_SEEDS}".no.singletons" ../${S_SWARM}".no.singletons" ../${LOG_FP} \
 ../${PROJECT_ID}"_sample_metadata.map" ../${ADD_METADATA_FILE} ../${PROJECT_ID}"_observation_metadata_full.map" \
-../${PROJECT_ID}"_OTU_table_pure_clean.csv" ../${PROJECT_ID}"_OTU_table_full_json_clean.biom" ../${PROJECT_ID}"_OTU_table_full_hdf5_clean.biom" \
+../${PROJECT_ID}"_OTU_table_pure_clean.csv" ../${PROJECT_ID}"_OTU_table_pure_clean_full.csv" ../${PROJECT_ID}"_OTU_table_full_json_clean.biom" ../${PROJECT_ID}"_OTU_table_full_hdf5_clean.biom" \
 ./${RESULTS_DIR}
 
 ln -s ../${REF_USED_FP}"/"${REF_DBS}"_"${FORWARDPRIMER}"_"${REVERSEPRIMER_RC}"_"${PRIMER_MISMATCH_REF}"_"${lenFP_CUT_REF}"_"${lenRP_CUT_REF}".fasta" ./${RESULTS_DIR}
