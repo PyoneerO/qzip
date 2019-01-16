@@ -609,7 +609,7 @@ echo $cmd >> q-zip_seq_of_coms.txt
 #create command
 cmd='
 echo -e `head -1 ${PROJECT_ID}"_OTU_table_pure_clean.csv"`"\t"`head -1 ${PROJECT_ID}"_observation_metadata_full.map" | awk '\''{printf($2"\t"$3"\t"$4)}'\''`
-> ${PROJECT_ID}_OTU_table_pure_clean.csv;
+> ${PROJECT_ID}_OTU_table_pure_clean_full.csv;
 awk '\''FNR==NR{a[$1]=$2"\t"$3"\t"$4; next}($1 in a){printf $0"\t"a[$1]"\n"}'\''
 ${PROJECT_ID}_observation_metadata_full.map 
 ${PROJECT_ID}_OTU_table_pure_clean.csv 
