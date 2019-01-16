@@ -588,12 +588,12 @@ cat ${PROJECT_ID}_OTU_table_pure.csv |
 awk '\''{print gensub(/\t'${SAMPLE_PREFIX_REGEXP}'/,"\t","g",$0)}'\'' |
 awk '\''{print gensub(/'${SAMPLE_SUFFIX_REGEXP}'\t/,"\t","g",$0)}'\''
 > ${PROJECT_ID}_OTU_table_pure_clean.csv'
-
 #execute command
 eval $cmd
 #print command to command trace file
 echo -e "\n#clean from SAMPLE_PREFIX and SAMPLE_SUFFIX:" >> q-zip_seq_of_coms.txt
 echo $cmd >> q-zip_seq_of_coms.txt
+
 
 # convert back from json to hdf5 format
 #create command
@@ -604,6 +604,23 @@ eval $cmd
 #print command to command trace file
 echo -e "\n#convert back from json to hdf5 format:" >> q-zip_seq_of_coms.txt
 echo $cmd >> q-zip_seq_of_coms.txt
+
+# add observation meta data to OTU table (csv)
+#create command
+cmd='
+echo -e `head -1 ${PROJECT_ID}"_OTU_table_pure_clean.csv"`"\t"`head -1 ${PROJECT_ID}"_observation_metadata_full.map" | awk '\''{printf($2"\t"$3"\t"$4)}'\''`
+> ${PROJECT_ID}_OTU_table_pure_clean.csv;
+awk '\''FNR==NR{a[$1]=$2"\t"$3"\t"$4; next}($1 in a){printf $0"\t"a[$1]"\n"}'\''
+${PROJECT_ID}_observation_metadata_full.map 
+${PROJECT_ID}_OTU_table_pure_clean.csv 
+>> ${PROJECT_ID}_OTU_table_pure_clean_full.csv
+'
+#execute command
+eval $cmd
+#print command to command trace file
+echo -e "\n#add observation meta data to OTU table (csv):" >> q-zip_seq_of_coms.txt
+echo $cmd >> q-zip_seq_of_coms.txt
+
 
 
 # analysis done
