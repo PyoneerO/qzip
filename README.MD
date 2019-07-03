@@ -1,6 +1,6 @@
 # Qzip
 
-Qzip is a bash script which wraps and connects common bioinformatics tools to produce OTU contingency tables from demultiplexed Illumina amplicon data.
+Qzip is a bash script which wraps and connects common bioinformatics tools to produce OTU contingency tables from demultiplexed Illumina paired-end amplicon sequences. 
 
 ## prerequisites (tested versions):
 - biom (2.1.6)
@@ -17,7 +17,11 @@ wget https://raw.githubusercontent.com/PyoneerO/qzip/master/q-zip_parameters.txt
 wget https://raw.githubusercontent.com/PyoneerO/qzip/master/q-zip_commands.sh
 
 ## input:
-- demultiplexed Miseq paired-end raw data (fastq/fastq.gz)
+- demultiplexed Miseq paired-end raw data (fastq/fastq.gz) with 
+  1. sufficient overlap of paired-end reads (80-100 bp overlap of raw reads recommended as \
+    a. read trimming reduces length of overlap for paired-end merging (recommended min 50 bp) and \
+    b. a long overlap improves amplicon quality)
+  2. and retained PCR primers
 - sample metadata file (optional)
 
 ## naming scheme for raw sequence data files:
