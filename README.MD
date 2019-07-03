@@ -20,19 +20,19 @@ copy q-zip_commands.sh and q-zip_parameters.txt into your working directory.
 - sample metadata file (optional)
 
 ## naming scheme for raw sequence data files:
-<SampleID>_<WellID/AlternativeSampleID>_<LaneNo>_<ReadNo>_001.fastq.gz
+SampleID_WellID/AlternativeSampleID_LaneNo_ReadNo_001.fastq.gz
 exemplary raw file name:
 95-HE492_S47_L001_R1_001.fastq.gz
 
 or
 
-<MachineID>_<RunIndex>_<FlowcellID>_<SampleID>_<WellID\/AlternativeSampleID>_<LaneNo>_<ReadNo>_001.fastq.gz
-(prefix "<MachineID>_<RunIndex>_<FlowcellID>_" added for traceability reasons)
+MachineID_RunIndex_FlowcellID_SampleID_WellID/AlternativeSampleID_LaneNo_ReadNo_001.fastq.gz
+(prefix "MachineID_RunIndex_FlowcellID_" added to improve traceability)
 exemplary raw file name:
 M03457_0023_000000000-C94HP_95-HE492_S47_L001_R1_001.fastq.gz
 
-If you provide regular expressions for Prefix (<MachineID>_<RunIndex>_<FlowcellID>_) and Suffix 
-(_<well id/alternative sample id>) in the parameter file, the sample names in the OTU tables will be cleaned from them.
+If you provide regular expressions for Prefix (MachineID_RunIndex_FlowcellID_) and Suffix 
+(_WellID/AlternativeSampleID) in the parameter file, the sample names in the OTU tables will be cleaned from them.
 
 ## parameter settings:
 open the file q-zip_parameters.txt with an editor and set parameters especially for:
@@ -45,7 +45,7 @@ open the file q-zip_parameters.txt with an editor and set parameters especially 
 simply source the script by . ./q-zip_commands.sh
 
 ## output:
-a zip file <ProjectName>_<Date>_<Time>.zip contsining the following:
+a zip file ProjectName_Date_Time.zip containing the following:
 - q-zip_commands.sh - used workflow file
 - q-zip_parameters.txt - used parameter file
 - q-zip_seq_of_coms.txt - sequence of used commands, sourcing of this file should result reproduce the results
