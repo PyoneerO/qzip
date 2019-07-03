@@ -56,8 +56,10 @@ a zip file ProjectName_Date_Time.zip containing the following:
 - amplicon_table.csv - distribution table of amplicons per sample
 - swarm.seeds.no.singletons - swarm/OTU representing sequences (singleton removal applied by default!)
 - swarm.swarm.no.singletons - list of amplicons per swarm/OTU (singleton removal applied by default!)
-- <project id>_observation_metadata_full.map - OTU/observation metadata
-- <project id>_sample_metadata.map - sample metadata
-- <project id>_OTU_table_full_json_clean.biom - OTU table as biom, json format, all provided metadata included
-- <project id>_OTU_table_full_hdf5_clean.biom - OTU table as biom, hdf5 format, all provided metadata included
-- <project id>_9_OTU_table_pure_clean.csv - OTU table + taxonomie as csv
+- ProjectID_observation_metadata_full.map - OTU/observation metadata
+- ProjectID_sample_metadata.map - sample metadata
+- ProjectID_OTU_table_full_json_clean.biom - OTU table as biom, json format, all provided metadata included
+- ProjectID_OTU_table_full_hdf5_clean.biom - OTU table as biom, hdf5 format, all provided metadata included
+- ProjectID_OTU_table_pure_clean.csv - OTU table + taxonomie as csv
+- ProjectID_OTU_table_pure_clean_full.csv - OTU table + taxonomie + sequence as csv
+
