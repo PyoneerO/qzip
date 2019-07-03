@@ -1,5 +1,4 @@
-# Q-zip is a bash script which wraps and connects common bioinformatics tools to produce OTU contingency tables from
-demultiplexed Illumina amplicon data.
+### Q-zip is a bash script which wraps and connects common bioinformatics tools to produce OTU contingency tables from demultiplexed Illumina amplicon data.
 
 ## prerequisites (tested versions):
 - biom (2.1.6)
