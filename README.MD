@@ -12,8 +12,9 @@ Qzip is a bash script which wraps and connects common bioinformatics tools to pr
 - GNU parallel (20141022)
 
 ## installing:
-git clone https://github.com/PyoneerO/qzip
-copy q-zip_commands.sh and q-zip_parameters.txt into your working directory.
+copy q-zip_commands.sh and q-zip_parameters.txt into your working directory:
+wget https://raw.githubusercontent.com/PyoneerO/qzip/master/q-zip_parameters.txt
+wget https://raw.githubusercontent.com/PyoneerO/qzip/master/q-zip_commands.sh
 
 ## input:
 - demultiplexed Miseq paired-end raw data (fastq/fastq.gz)
