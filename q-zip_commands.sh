@@ -70,7 +70,7 @@ mkdir ${LOG_FP} ${RESULTS_DIR} ${REF_USED_FP}
 #if [ "${REUSE_REF_SEQS}" == "NO" ]; then rm -r ${REF_USED_FP}; mkdir ${REF_USED_FP}; fi
 touch q-zip_seq_of_coms.txt
 
-## PREPARE REPRODUCIBILITY VIA TRACE FILE
+## PREPARE TRACE FILE FOR INCREASED TRACEABILITY / REPRODUCIBILITY
 echo "#PROJECT ID: "${PROJECT_ID} >> q-zip_seq_of_coms.txt
 echo -e "\n#source parameter" >> q-zip_seq_of_coms.txt
 echo ". ./q-zip_parameters.txt" >> q-zip_seq_of_coms.txt
@@ -81,8 +81,6 @@ echo "mkdir "${REF_USED_FP} >> q-zip_seq_of_coms.txt
 
 
 ## CREATE PRIMER-TRIMMED REFDB
-#for i in ${REF_DBS}; do
-#searching and trimming of primer of reference sequences
 #create command
 cmd='cat ${REF_RAW_PATH}"/"${REF_DBS}".fasta" |
 ${CUTADAPT} -g ${FORWARDPRIMER} --discard-untrimmed --minimum-length ${MIN_LEN_REF} -e ${PRIMER_MISMATCH_REF} -O ${lenFP_CUT_REF} - |
@@ -206,16 +204,6 @@ if [ ${DEBUG} == "NO" ]; then rm *primer_cut.fastq; fi
 ## GET SEQ NUMBER AFTER FEATURE FILTERING
 cat ${PROJECT_ID}*".map" | while read a b c ; do if [ -s $a.trimmed.assembled.bothdir_concat.primer_cut.feature_filtered.fastq ]; then grep -c "^+$" $a.trimmed.assembled.bothdir_concat.primer_cut.feature_filtered.fastq; else echo "0"; fi;done >> seq_number_stats.interm
 
-### MAKE FASTQC REPORTS
-## subsample feature_filtered seqs (FASTQC_SUB)
-# ls -1S | grep feature_filtered.fastq | parallel -j ${THREADS} "awk -v fqs="${FASTQC_SUB}" 'NR%(fqs*4)==1{print;getline;print;getline;print;getline;print}' {} > {.}.sub_${FASTQC_SUB}.fastq"
-# ${FASTQC} -t ${THREADS} *sub_${FASTQC_SUB}.fastq
-# only subsampled
-# Basic Statistics => PASS;
-# Per base sequence quality => PASS;
-# Per sequence quality scores =>;
-# Per base N content => Pass;
-# Sequence length distribution => [PASS | WARN]
 
 ## DEREPLICATION ON SAMPLE LEVEL
 #create command
@@ -232,6 +220,7 @@ echo $cmd >> q-zip_seq_of_coms.txt
 cat ${PROJECT_ID}*".map" | while read a b c ; do if [ -s $a.trimmed.assembled.bothdir_concat.primer_cut.feature_filtered.derep.fasta ]; then grep -c "^>" $a.trimmed.assembled.bothdir_concat.primer_cut.feature_filtered.derep.fasta; else echo "0"; fi;done >> seq_number_stats.interm
 ## REMOVE NOT NEEDED INTERMEDIATE FILES
 if [ ${DEBUG} == "NO" ]; then rm *feature_filtered.fastq; fi
+
 
 ## DETECT AND REMOVE CHIMERAS DENOVO
 #Detect chimera
@@ -292,6 +281,7 @@ echo $cmd >> q-zip_seq_of_coms.txt
 cat ${PROJECT_ID}*".map" | while read a b c ; do if [ -s $a*${WORKFLOW_SUFFIX}.fasta ]; then \
 echo "yes"; else echo "no"; fi; done >> seq_number_stats.interm
 
+
 ## DEREPLICATE FULL STUDY + ADJUST ABUNDANCE INFORMATION FORMAT
 #create command
 #cmd='cat *.non_chimeras_denovo.fasta | ${VSEARCH} --threads ${THREADS} --derep_fulllength - --sizein --sizeout --fasta_width 0 --output full_set_dereplicated.fasta'
@@ -311,6 +301,7 @@ echo -e "sample_ID\traw\ttrimmed\tassembled\tprimer_filtered\tfeature_filtered\t
 lns=`awk 'END{print NR}' ${PROJECT_ID}*".map"`; cat seq_number_stats.interm | pr -ts'' --columns 11 -l $lns >>seq_number_stats.txt
 ## PRINT STATS FILE
 column -t seq_number_stats.txt
+
 
 ## SWARM OTU CLUSTERING
 #create command
@@ -478,7 +469,7 @@ echo -e "\n#Adding taxonomy to OTU table:" >> q-zip_seq_of_coms.txt
 echo $cmd >> q-zip_seq_of_coms.txt
 
 
-## MAKE BIOM FILE; FUTURE: also external other meta data
+## MAKE OTU TABLES AND BIOM FILES
 
 #make sample metadata map from raw file to sample map
 # create command
@@ -636,88 +627,8 @@ echo "$((${DURATION} / 3600)) hours, $(((${DURATION} / 60) % 60)) minutes and $(
 
 sleep 2
 
-echo "Write html index file for navigation"
 
-echo '
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html><head>
-<style><endnote><head>
-<style></style>
-<meta content="text/html; charset=ISO-8859-1" http-equiv="content-type"><title>Qzip: a rapid meta-barcoding pipeline</title>
-<style type="text/css">
-body { font-family:Verdana,Arial,Helvetica,sans-serif; background-color: #ffffff; }
-A:link {color: rgb(83, 141, 189) ; text-decoration:none</style></head>
-<body>
-<br><table style="width: 1031px; height: 101px;" border="0"><tbody><tr valign="top"><td><img style="width: 311px; height: 119px;" src="https://www.awi.de/typo3conf/ext/sms_boilerplate/Resources/Public/Images/AWI/awi_logo.svg"></td><td><div style="">
-<big><br>Alfred Wegener Institute for Polar and Marine Research
-<br><br></big><a href="https://www.awi.de/en/about-us/organisation/staff/stefan-neuhaus.html">StefanNeuhaus | Scientific Computing | Bioinformatics <br>
-phone: +49(471)4831-2329 | e-mail: Stefan.Neuhaus@awi.de <br>
-</a>
-</div></td></tr></tbody></table><br>
-<hr><br>
-<br><h1 style="margin-left: 200px;"><small>QZIP - rapid metabarcoding pipeline</small></h1>
-<br><br><table style="width: 891px; height: 215px;" border="0">
-<tbody>
-<tr><td style="width: 213px;"><h3>Project</h3></td><td style="width: 221px;"></td><td style="width: 203px;"><h3>Target</h3></td><td style="width: 224px;"></td></tr><tr><td style="width: 213px;">Project name</td><td style="width: 221px;">'${PROJECT_NAME}'</td><td style="width: 203px;">Molecule<br></td><td style="width: 224px;">'${TARGET_MOLECULE}'</td></tr><tr><td style="width: 213px;">
-Name(s) of PI</td><td style="width: 221px;">
-'${PI_NAMES}'<br></td><td style="width: 203px;">
-Region</td><td style="width: 224px;">
-'${TARGET_REGION}'</td></tr><tr><td style="width: 213px;">
-Date of analysis</td><td style="width: 221px;">
-'${ST_DATE}'</td><td style="width: 203px;">
-Fwd primer</td><td style="width: 224px;">
-'${FORWARDPRIMER}'</td></tr><tr><td style="width: 213px;">
-Start time</td><td style="width: 221px;">
-'${ST_TIME}'</td><td style="width: 203px;">
-Rev primer</td><td style="width: 224px;">
-'${REVERSEPRIMER}'</td></tr><tr><td style="width: 213px;">
-End time</td><td style="width: 221px;">'${END_TIME}'</td><td style="width: 203px;">
-Reference datasets</td><td style="width: 224px;">'${REF_DBS}'</td></tr><tr><td style="width: 213px;">
-Sample meta data</td><td style="width: 221px;"><a href='${PROJECT_ID}.map'>'${PROJECT_ID}.map'</a></td><td style="width: 203px;"></td><td style="width: 224px;"></td></tr>
-</tbody>
-</table>
-<span style="font-weight: bold;"></span><br>
-<table style="width: 893px; height: 143px;" border="0">
-<tbody>
-<tr>
-<td colspan="2" rowspan="1" style="width: 192px;"><h3>Input and settings</h3></td>
-<td style="width: 183px;"><h3>Pipeline</h3></td><td style="width: 208px;"></td>
-</tr>
-<tr valign="top">
-<td style="width: 192px;">Raw files sample map</td>
-<td style="width: 200px;">&lt;Link to sample map&gt;&nbsp;</td><td style="width: 183px;">Description</td><td style="width: 208px;">&lt;Link to description vX&gt;</td>
-</tr><tr><td>Reference sets used</td><td>&lt;Link to reference sets&gt;</td><td>Source code</td><td>&lt;link to script&gt;</td></tr><tr><td>Configuration file</td><td>&lt;Link to config file&gt;</td><td></td><td></td></tr>
-</tbody>
-</table><span style="font-weight: bold;"><br></span>
-<table style="width: 893px; height: 227px;" border="0">
-<tbody>
-<tr>
-<td style="width: 192px;"><h3>Results</h3></td>
-<td style="width: 200px;"></td><td colspan="2" rowspan="1" style="width: 183px;"><h3>Sequence quality assessment</h3></td>
-</tr>
-<tr valign="top">
-<td style="width: 192px;">OTU tables</td>
-<td style="width: 200px;">&lt;Link to OTU tables&gt;&nbsp;</td><td style="width: 183px;">Workflow statistics</td><td style="width: 208px;">&lt;Link to stat file&gt;</td>
-</tr><tr><td>OTU tables subsampled<br></td><td>&lt;Link to subsampled OTU tables&gt;</td><td>FastQC report<br></td><td>&lt;Link to condensed report&gt;</td></tr><tr><td>OTU sequences (seeds)</td><td>&lt;Link to seeds file&gt;<br></td><td></td><td></td></tr><tr><td>Amplicon to OTU mapping (swarm)</td><td>&lt;Link to swarm file&gt;<br></td><td></td><td></td></tr><tr><td>Taxonomic overview</td><td>&lt;Link to crona plot&gt;</td><td></td><td></td></tr>
-</tbody>
-</table><span style="font-weight: bold;"></span><br>
-<table style="width: 450px; height: 97px;" border="0">
-<tbody>
-<tr>
-<td colspan="2" rowspan="1" style="height: 48px; width: 200px;"><h3>Workflow documentation</h3></td>
-</tr>
-<tr valign="top">
-<td style="height: 24px; width: 192px;">Log file</td>
-<td style="height: 24px; width: 200px;">&lt;Link to log file&gt;&nbsp;</td>
-</tr>
-</tbody>
-</table><span style="font-weight: bold;"></span><br><br><hr>Project ID: '${PROJECT_ID}'&nbsp;<br>
-</body></html>
-' > q-zip_index.html
-
-
-
-ln -s ../seq_number_stats.txt ../q-zip_workflow.log ../q-zip_commands.sh ../q-zip_parameters.txt ../q-zip_index.html ../q-zip_seq_of_coms.txt \
+ln -s ../seq_number_stats.txt ../q-zip_workflow.log ../q-zip_commands.sh ../q-zip_parameters.txt ../q-zip_seq_of_coms.txt \
 ../${AMPLICON_TABLE} ../${S_SEEDS}".no.singletons" ../${S_SWARM}".no.singletons" ../${LOG_FP} \
 ../${PROJECT_ID}"_sample_metadata.map" ../${ADD_METADATA_FILE} ../${PROJECT_ID}"_observation_metadata_full.map" \
 ../${PROJECT_ID}"_OTU_table_pure_clean.csv" ../${PROJECT_ID}"_OTU_table_pure_clean_full.csv" ../${PROJECT_ID}"_OTU_table_full_json_clean.biom" ../${PROJECT_ID}"_OTU_table_full_hdf5_clean.biom" \
