@@ -26,7 +26,7 @@ exemplary raw file name:
 
 or
 
-<MachineID>_<RunIndex>_<FlowcellID>_<SampleID>_<WellID/AlternativeSampleID>_<LaneNo>_<ReadNo>_001.fastq.gz
+<MachineID>_<RunIndex>_<FlowcellID>_<SampleID>_<WellID\/AlternativeSampleID>_<LaneNo>_<ReadNo>_001.fastq.gz
 (prefix "<MachineID>_<RunIndex>_<FlowcellID>_" added for traceability reasons)
 exemplary raw file name:
 M03457_0023_000000000-C94HP_95-HE492_S47_L001_R1_001.fastq.gz
