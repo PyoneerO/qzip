@@ -1,13 +1,15 @@
-prerequisites:
-- biom 2.1.6
-- trimmomatic 0.38
-- cutadapt 1.17
-- swarm 2.2.2
-- vsearch 2.8.2
-- mothur 1.40.5
-- parallel 20141022
-- mafft
-- RaxML
+Q-zip is a bash script which wraps and connects common bioinformatics tools to produce OTU contingency tables from
+demultiplexed Illumina amplicon data.
+
+prerequisites (version used):
+- biom (2.1.6)
+- trimmomatic (0.38)
+- cutadapt (1.17)
+- swarm (2.1.8)
+- vsearch (2.8.2)
+- mothur (1.40.5)
+- GNU parallel (20141022)
+
 
 installing:
 git clone https://github.com/PyoneerO/qzip
@@ -18,9 +20,16 @@ input:
 - sample metadata file (optional)
 
 naming scheme:
-exemplary raw file name
-<sequencing date>_<machine id><run id><sample id><well id/alternative sample id><lane id><read id>_001.fastq.gz
-180201_M00758_0705_lane1nifh10_S39_L001_R1_001.fastq.gz
+
+<SampleID>_<WellID/AlternativeSampleID>_<LaneNo>_<ReadNo>_001.fastq.gz
+exemplary raw file name:
+95-HE492_S47_L001_R1_001.fastq.gz
+
+<MachineID>_<RunIndex>_<FlowcellID>_<SampleID>_<WellID/AlternativeSampleID>_<LaneNo>_<ReadNo>_001.fastq.gz
+(prefix "<MachineID>_<RunIndex>_<FlowcellID>_" added for traceability reasons)
+exemplary raw file name:
+M03457_0023_000000000-C94HP_95-HE492_S47_L001_R1_001.fastq.gz
+
 
 the sample names for your sample metadata mapping require the following scheme 
 (according to the corresponding raw sequence files without the segment "_<lane id><read id>_001.fastq.gz"):
@@ -29,7 +38,7 @@ the sample names for your sample metadata mapping require the following scheme
 <sample id><well id/alternative sample id> (lane1nifh10_S39) or
 <sequencing date>_<machine id><run id><sample id><well id/alternative sample id> (80201_M00758_0705_lane1nifh10_S39)
 
-If you provide regular expressions for Prefix (<sequencing date>_<machine id><run id>_) and Suffix 
+If you provide regular expressions for Prefix (<MachineID>_<RunIndex>_<FlowcellID>_) and Suffix 
 (_<well id/alternative sample id>) in the parameter file, the sample names in the OTU tables will be cleaned from them.
 
 parameter:
