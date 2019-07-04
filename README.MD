@@ -1,8 +1,33 @@
-# Qzip
+# Qzip - a rapid meta-barcoding pipeline
 
-Qzip is a bash script which wraps and connects common bioinformatics tools to produce OTU contingency tables from demultiplexed Illumina paired-end amplicon sequences. 
+Qzip is a bash script which wraps and connects common bioinformatics tools to produce sample by observation contingency tables from demultiplexed Illumina paired-end amplicon sequences.
+The usage of GNU parallel for most parallelizable processing steps and the usage of Swarm as fast clustering method makes it extremely speedy. On a 20 core linux system (physical cores) the processing of about 300 million sequences from a large scale project only takes ~ 6 h and the processing of 10 million sequences from a handy-sized project only takes a few minutes.
 
-## prerequisites (tested versions):
+## features
+- easy to install and use
+- based on open source tools
+- rigorous sequence pre-filtering
+- Swarm-based clustering
+- reference-independence until annotation
+- contingency tables as biom file and as csv tables
+- sequence number and length statistics for each step
+- command-line logging and command recording
+
+## outline
+1. filter and trim of the reference sequences (cutadapt)
+Only sequences which contain both primers are passing the filter. Primer and segments beyond are removed to obtain a homolog region block, flanked by the used PCR primer.
+2. 3'-quality trimming of paired end query reads (trimmomatic)
+3. Overlap-merge of paired-ends (vsearch)
+4. Adjustment of orientation 5'-> 3' and trimming of primer segements (cutadapt)
+5. Feature filter (vsearch)
+A Min and max length filter and a "max number of expected errors" filter are implemented.
+6. Chimera filter (vsearch)
+Prediction of putative chimeric sequences sample-wise and removal of them from the sample if they do not occur in any other sample.
+7. Swarm clustering (swarm)
+8. Annotation by naive bayesian classifier (mothur)
+
+## prerequisites:
+Please have available the following tools. The brackets indicate the used and tested versions. Higher versions will probably work as well, lower versions might not.
 - biom (2.1.6)
 - trimmomatic (0.38)
 - cutadapt (1.17)
@@ -44,6 +69,12 @@ open the file q-zip_parameters.txt with an editor and set parameters especially 
 - primer sequences
 - reference set (formatted according to mothur)
 - paths to the needed executables
+
+## reference sets
+the pipeline accepts reference sets which consist of two files:
+1. a fasta file containing the reference sequencing having unique IDs
+2. a text file containing ID to taxonomy mapping. The taxonomic items need to be separated by ";" and the taxonomic tree needs to be "artifically balanced", which means that the taxonomy strings in the map are required to have equal taxonomic level depth. PR2 datasets and datasets distributed by the mothur webiste are already in the correct format.
+Please use the same name for taxonomy map and fasta file, except of the filename suffixes which need to be "tax" for the mapping file and "fasta" for the fasta file. Please avoid any special character in the strings, except of underscore "\_" and and specify the used reference set in the parameter file without filename suffix.
 
 ## workflow execution:
 simply source the script by . ./q-zip_commands.sh
