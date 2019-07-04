@@ -14,14 +14,14 @@ The usage of GNU parallel for most parallelizable processing steps and the usage
 - command-line logging and command recording
 
 ## outline
-1. filter and trim of the reference sequences (cutadapt)
+1. filter and trim of the reference sequences (cutadapt)\
 Only sequences which contain both primers are passing the filter. Primer and segments beyond are removed to obtain a homolog region block, flanked by the used PCR primer.
 2. 3'-quality trimming of paired end query reads (trimmomatic)
 3. Overlap-merge of paired-ends (vsearch)
 4. Adjustment of orientation 5'-> 3' and trimming of primer segements (cutadapt)
-5. Feature filter (vsearch)
+5. Feature filter (vsearch)\
 A Min and max length filter and a "max number of expected errors" filter are implemented.
-6. Chimera filter (vsearch)
+6. Chimera filter (vsearch)\
 Prediction of putative chimeric sequences sample-wise and removal of them from the sample if they do not occur in any other sample.
 7. Swarm clustering (swarm)
 8. Annotation by naive bayesian classifier (mothur)
