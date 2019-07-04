@@ -15,7 +15,7 @@ The usage of GNU parallel for most parallelizable processing steps and the usage
 
 ## outline
 1. filter and trim of the reference sequences (cutadapt)\
-Only sequences which contain both primers are passing the filter. Primer and segments beyond are removed to obtain a homolog region block, flanked by the used PCR primer.
+Only sequences which contain both primers are passing the filter. Flanking primers and segments beyond are removed to obtain a homolog region block.
 2. 3'-quality trimming of paired end query reads (trimmomatic)
 3. Overlap-merge of paired-ends (vsearch)
 4. Adjustment of orientation 5'-> 3' and trimming of primer segements (cutadapt)
@@ -83,7 +83,7 @@ simply source the script by . ./q-zip_commands.sh
 a zip file ProjectName_Date_Time.zip containing the following:
 - q-zip_commands.sh - used workflow file
 - q-zip_parameters.txt - used parameter file
-- q-zip_seq_of_coms.txt - sequence of used commands, sourcing of this file should result reproduce the results
+- q-zip_seq_of_coms.txt - sequence of used commands, sourcing of this file should reproduce the results
 (except of the annotation as the mothur naive bayesian classifier has a random moment)
 - q-zip_workflow.log - log file
 - refDB.zip - primer filtered and trimmed reference set used for annotation
