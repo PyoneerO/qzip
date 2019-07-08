@@ -402,7 +402,9 @@ eval $cmd
 #print command to command trace file
 echo -e "\n#Create header for OTU table:" >> q-zip_seq_of_coms.txt
 echo $cmd >> q-zip_seq_of_coms.txt
+
 # OTU table
+# copied and adjusted from https://github.com/torognes/swarm/wiki/Working-with-several-samples
 # create command
 cmd='
 cat ${S_STATS}.no.singletons | parallel -j ${THREADS} --pipe -l --block-size 100 --round-robin -q 
