@@ -278,7 +278,7 @@ echo $cmd >> q-zip_seq_of_coms.txt
 
 
 ## ADD SAMPLE ABUNDANCE FILTER PASSED TO SEQ NUMBER STATS
-cat ${PROJECT_ID}*".map" | while read a b c ; do if [ -s $a*${WORKFLOW_SUFFIX}.fasta ]; then \
+cat ${PROJECT_ID}*".map" | while read a b c ; do if [ -s $a${WORKFLOW_SUFFIX}.fasta ]; then \
 echo "yes"; else echo "no"; fi; done >> seq_number_stats.interm
 
 
