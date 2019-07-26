@@ -77,7 +77,8 @@ the pipeline accepts reference sets which consist of two files:
 Please use the same name for taxonomy map and fasta file, except of the filename suffixes which need to be "tax" for the mapping file and "fasta" for the fasta file. Please avoid any special character in the strings, except of underscore "\_" and and specify the used reference set in the parameter file without filename suffix.
 
 ## workflow execution:
-simply source the script by . ./q-zip_commands.sh
+simply source the script:
+. ./q-zip_commands.sh
 
 ## output:
 a zip file ProjectName_Date_Time.zip containing the following:
