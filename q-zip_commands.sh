@@ -407,7 +407,7 @@ echo $cmd >> q-zip_seq_of_coms.txt
 # copied and adjusted from https://github.com/torognes/swarm/wiki/Working-with-several-samples
 # create command
 cmd='
-cat ${S_STATS}.no.singletons | parallel -j ${THREADS} --pipe -l --block-size 100 --round-robin -q 
+cat ${S_STATS}.no.singletons | parallel -j ${THREADS_OTU} --pipe -l --block-size 100 --round-robin -q 
 awk -v SWARM="${S_SWARM}.no.singletons"
     -v TABLE="${AMPLICON_TABLE}"
     '\''BEGIN {FS = " ";
