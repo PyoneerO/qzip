@@ -9,6 +9,8 @@ PROJECT_NAME="test_project"
 TARGET_MOLECULE="18S"
 TARGET_REGION="v4"
 THREADS="40"
+THREADS_OTU="10"
+#for large analysis projects it is recommended to reduce number of threads/cores for the OTU table creation step
 #[1:max#cores]
 DEBUG="NO"
 #[YES NO]; NO removes intermediate sequence files if not used anymore
