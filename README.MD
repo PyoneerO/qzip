@@ -73,8 +73,9 @@ open the file q-zip_parameters.txt with an editor and set parameters especially 
 ## reference sets
 the pipeline accepts reference sets which consist of two files:
 1. a fasta file containing the reference sequencing having unique IDs
-2. a text file containing ID to taxonomy mapping. The taxonomic items need to be separated by ";" and the taxonomic tree needs to be "artifically balanced", which means that the taxonomy strings in the map are required to have equal taxonomic level depth. PR2 datasets and datasets distributed by the mothur webiste are already in the correct format.
-Please use the same name for taxonomy map and fasta file, except of the filename suffixes which need to be "tax" for the mapping file and "fasta" for the fasta file. Please avoid any special character in the strings, except of underscore "\_" and and specify the used reference set in the parameter file without filename suffix.
+2. a text file containing ID to taxonomy mapping. The taxonomic items need to be separated by ";" and the taxonomic tree needs to be "artifically balanced", which means that the taxonomy strings in the map are required to have equal taxonomic level depth. 
+PR2 datasets and datasets distributed by the mothur webiste are already in the correct format.
+Please use the same name for taxonomy map and fasta file, except of the filename suffixes which need to be "tax" for the mapping file and "fasta" for the fasta file. Please avoid any special character in the name strings, except of underscore "\_". You then need to specify the used reference set in the parameter file without filename suffix.
 
 ## workflow execution:
 simply source the script:
