@@ -80,6 +80,7 @@ Please use the same name for taxonomy map and fasta file, except of the filename
 
 ## workflow execution:
 simply source the script:
+
 . ./q-zip_commands.sh
 
 ## output:
