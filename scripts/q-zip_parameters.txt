@@ -19,7 +19,7 @@ ADD_METADATA_FILE="add_sample_metadata.txt"
 # tab-delimited + header (first line beginning with #)
 
 # REFERENCE SETTINGS
-REF_RAW_PATH="/scratch6/db/q_zip_dbs/"
+REF_RAW_PATH="/qzip/test/references/"
 REF_DBS="pr2_version_4_11_1_mothur"
 #[silva_ref_v128_full_Euk silva_nr_v128_full_Euk silva_nr_v123_1_full_Euk silva_nr_v132]
 #[pr2_gb203_v4_5 pr2_version_4_11_1_mothur silva_nr_v128_full_Pros nifH_arb_2014]
