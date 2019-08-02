@@ -31,7 +31,7 @@ TRIMMOMATIC=${BINDIR}/trimmomatic
 VSEARCH=${BINDIR}/vsearch
 SWARM=${BINDIR}/swarm
 MOTHUR=${BINDIR}/mothur
-FASTQC=${BINDIR}/fastqc
+#FASTQC=${BINDIR}/fastqc
 CUTADAPT=cutadapt
 BIOM=biom
 
