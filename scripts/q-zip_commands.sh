@@ -35,7 +35,7 @@ echo "Reference(s): "${REF_DBS}
 
 echo "Check availability of needed tools"
 ### EXIT IF IMPORTANT TOOLS NOT AVAILABLE
-which ${FASTQC} > /dev/null; if [ $? -ne 0 ]; then echo "FASTQC not found; exit"; exit 1; else echo "FASTQC found"; fi
+#which ${FASTQC} > /dev/null; if [ $? -ne 0 ]; then echo "FASTQC not found; exit"; exit 1; else echo "FASTQC found"; fi
 which ${TRIMMOMATIC}  > /dev/null; if [ $? -ne 0 ]; then echo "TRIMMOMATIC not found; exit"; exit 1; else echo "TRIMMOMATIC found"; fi
 which ${CUTADAPT} > /dev/null; if [ $? -ne 0 ]; then echo "CUTADAPT not found; exit"; exit 1; else echo "CUTADAPT found"; fi
 which ${SWARM} > /dev/null; if [ $? -ne 0 ]; then echo "SWARM not found; exit"; exit 1; else echo "SWARM found"; fi
