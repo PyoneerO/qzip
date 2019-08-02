@@ -1,0 +1,121 @@
+##################
+### PARAMETERS ###
+##################
+
+# GLOBAL
+PI_NAMES=""
+PROJECT_NAME="test_project"
+# only AlNum [A-Z,a-z,0-9] and "-" and "_" allowed
+TARGET_MOLECULE="18S"
+TARGET_REGION="v4"
+THREADS="40"
+THREADS_OTU="10"
+#for large analysis projects it is recommended to reduce number of threads/cores for the OTU table creation step
+#[1:max#cores]
+DEBUG="NO"
+#[YES NO]; NO removes intermediate sequence files if not used anymore
+ADD_METADATA_FILE="add_sample_metadata.txt"
+# additional sample metadata to be merged in the biom file (OTU table + taxonomy + sequence +  other run-related metadata)
+# tab-delimited + header (first line beginning with #)
+
+# REFERENCE SETTINGS
+REF_RAW_PATH="/scratch6/db/q_zip_dbs/"
+REF_DBS="pr2_version_4_11_1_mothur"
+#[silva_ref_v128_full_Euk silva_nr_v128_full_Euk silva_nr_v123_1_full_Euk silva_nr_v132]
+#[pr2_gb203_v4_5 pr2_version_4_11_1_mothur silva_nr_v128_full_Pros nifH_arb_2014]
+# mothur issue: only use AlNum [A-Z,a-z,0-9] and underscore "_" in names for ref_dbs 
+
+# BINARY LOCATIONS
+BINDIR="/opt/bio/"
+TRIMMOMATIC=${BINDIR}/trimmomatic
+VSEARCH=${BINDIR}/vsearch
+SWARM=${BINDIR}/swarm
+MOTHUR=${BINDIR}/mothur
+FASTQC=${BINDIR}/fastqc
+CUTADAPT=cutadapt
+BIOM=biom
+
+# DIRECTORY SETTINGS
+REF_USED_FP="./refDB/"
+RESULTS_DIR="./results"
+
+# OLIGOS
+#FORWARDPRIMER="CCAGCASCYGCGGTAATTCC"
+FORWARDPRIMER="GCGGTAATTCCAGCTCCAA"
+REVERSEPRIMER="ACTTTCGTTCTTGAT"
+
+## PREPARE REFS
+# cutadapt filter (reference sequence length + primer found)
+MIN_LEN_REF=300
+MAX_LEN_REF=550
+MIN_PRIMER_OVERLAP_FRAC_REF="75/100"
+# value as fraction
+PRIMER_MISMATCH_REF="0.1"
+
+## PROCESS RAW SEQUENCES
+
+# TRIMMOMATIC
+SLIDINGWINDOW="3:8"
+CROP="300"
+
+# VSEARCH merge/assemble paired-ends
+FASTQ_MAXDIFFS="5"
+FASTQ_MINOVLEN="50"
+
+# CUTADAPT PRIMER FILTER AND TRIM OF QUERIES
+PRIMER_MISMATCH="0.1"
+MIN_PRIMER_OVERLAP_FRAC="90/100"
+
+# VSEARCH feature filters
+#maximum expected error per sequence allowed
+FASTQ_MAXEE="0.5"
+#number ambiguities allowed
+FASTQ_MAXNS="0"
+#length filter
+FASTQ_MINLEN="300" #FASTQ_MAXLEN = AVGLEN + AVGLENRADIUS #feature filter
+FASTQ_MAXLEN="550" #FASTQ_MINLEN = AVGLEN - AVGLENRADIUS #feature filter
+
+# VSEARCH chimera filter
+# no adjustments possible
+# this filter predicts putative chimeric sequences sample-wise
+# and removes them from the sample if it does not occur in any other sample
+
+# Min sample size filter to feed swarm
+MIN_SAMPLE_SIZE=10000
+
+## SWARMING
+DISTANCE="1"
+# number of allowed base differences to connect amplicons during single-linkage clustering step
+F_BOUNDARY="3"
+#default: 3; for singletons and doubletons it will be tried to graft them onto more abundant cluster
+S_STRUCT="swarm.struct"
+S_STATS="swarm.stats"
+S_SEEDS="swarm.seeds"
+S_SWARM="swarm.swarm"
+
+## CLUSTER SIZE CUTOFF
+#disabled
+#always removal of singletons
+
+## MOTHUR TAXONOMIC ASSIGNMENT WITH NAIVE BAYESIAN CLASSIFIER
+RDP_CUTOFF="80"
+# bootstrap cutoff
+
+## RESULTS
+OTU_TABLE="OTU_table.csv"
+AMPLICON_TABLE="amplicon_table.csv"
+
+### GET DEPENDING PARAMETER, DO NOT CHANGE
+PROJECT_ID=${PROJECT_NAME}"_"${ST_DATE}_${ST_TIME}
+REVERSEPRIMER_RC=`echo ${REVERSEPRIMER} | tr "[ATGCatgcRYSWKMBDHVryswkmbdhv]" "[TACGtacgYRSWMKVHDByrswmkvhdb]" | rev`
+lenFP_CUT_REF=$(( ${#FORWARDPRIMER} * ${MIN_PRIMER_OVERLAP_FRAC_REF} ))
+lenRP_CUT_REF=$(( ${#REVERSEPRIMER_RC} * ${MIN_PRIMER_OVERLAP_FRAC_REF} ))
+lenFP_CUT=$(( ${#FORWARDPRIMER} * ${MIN_PRIMER_OVERLAP_FRAC} ))
+lenRP_CUT=$(( ${#REVERSEPRIMER_RC} * ${MIN_PRIMER_OVERLAP_FRAC} ))
+
+WORKFLOW_SUFFIX=".trimmed.assembled.bothdir_concat.primer_cut.feature_filtered.derep.non_chimeras_denovo"
+#SUFFIX of preprocessed files reflecting order of processing steps
+SAMPLE_PREFIX_REGEXP="M[0-9]{5}_[0-9]{4}_0{9}-[0-9A-Z]{5}_"
+#Sequencing information added to sample name: <MachineID>_<RunIndex>_<FlowcellID>
+SAMPLE_SUFFIX_REGEXP="_S[0-9]{1,3}"
+#suffix added by sequencer default; well number of plate
