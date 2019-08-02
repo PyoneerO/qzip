@@ -26,7 +26,7 @@ REF_DBS="pr2_version_4_11_1_mothur"
 # mothur issue: only use AlNum [A-Z,a-z,0-9] and underscore "_" in names for ref_dbs 
 
 # BINARY LOCATIONS
-BINDIR="/opt/bio/"
+BINDIR="/opt/"
 TRIMMOMATIC=${BINDIR}/trimmomatic
 VSEARCH=${BINDIR}/vsearch
 SWARM=${BINDIR}/swarm
