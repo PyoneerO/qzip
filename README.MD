@@ -8,7 +8,7 @@ The usage of GNU parallel for most parallelizable processing steps and the usage
   wget https://raw.githubusercontent.com/PyoneerO/qzip/master/Dockerfile
 - build image: \
   docker build -t qzip . 
-- create q-zip container: \
+- run a q-zip container: \
   docker run --rm -it qzip /bin/bash 
 - clone q-zip repo locally: \
   git clone https://github.com/PyoneerO/qzip 
@@ -66,7 +66,7 @@ wget https://raw.githubusercontent.com/PyoneerO/qzip/master/q-zip_commands.sh
   wget https://raw.githubusercontent.com/PyoneerO/qzip/master/Dockerfile
 - create a qzip docker image: \
   docker build -t qzip .
-- run a qzip docker container: \
+- run a qzip container: \
   docker run --rm -it qzip /bin/bash \
 Then enter your working directory and download the q-zip_parameters.txt and q-zip_commands.sh files.
 
