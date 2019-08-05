@@ -4,8 +4,8 @@ Qzip is a bash script which wraps and connects common bioinformatics tools to pr
 The usage of GNU parallel for most parallelizable processing steps and the usage of Swarm as fast clustering method makes it extremely speedy. On a 20 core linux system (physical cores) the processing of about 300 million sequences from a large scale project only takes ~ 6 h and the processing of 10 million sequences from a handy-sized project only takes a few minutes.
 
 ## Fast start
-- get dockerfile: \
-  wget https://github.com/PyoneerO/qzip/dockerfile 
+- get Dockerfile: \
+  wget https://github.com/PyoneerO/qzip/Dockerfile 
 - build image: \
   docker build -t qzip . 
 - create q-zip container: \
@@ -62,8 +62,8 @@ Simply copy q-zip_commands.sh and q-zip_parameters.txt into your working directo
 wget https://raw.githubusercontent.com/PyoneerO/qzip/master/q-zip_parameters.txt \
 wget https://raw.githubusercontent.com/PyoneerO/qzip/master/q-zip_commands.sh
 ### you do not want to spend too much time with setting up the environment (but you have docker installed)?
-- get the docker file: \
-  wget https://github.com/PyoneerO/qzip/dockerfile
+- get the Dockerfile: \
+  wget https://github.com/PyoneerO/qzip/Dockerfile
 - create a qzip docker image: \
   docker build -t qzip .
 - run a qzip docker container: \
