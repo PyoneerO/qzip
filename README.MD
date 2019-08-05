@@ -3,7 +3,7 @@
 Qzip is a bash script which wraps and connects common bioinformatics tools to produce sample by observation contingency tables from demultiplexed Illumina paired-end amplicon sequences.
 The usage of GNU parallel for most parallelizable processing steps and the usage of Swarm as fast clustering method makes it extremely speedy. On a 20 core linux system (physical cores) the processing of about 300 million sequences from a large scale project only takes ~ 6 h and the processing of 10 million sequences from a handy-sized project only takes a few minutes.
 
-## Fast start
+## quick start
 - get Dockerfile: \
   wget https://raw.githubusercontent.com/PyoneerO/qzip/master/Dockerfile
 - build image: \
