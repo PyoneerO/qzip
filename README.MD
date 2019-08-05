@@ -5,7 +5,7 @@ The usage of GNU parallel for most parallelizable processing steps and the usage
 
 ## Fast start
 - get Dockerfile: \
-  wget https://github.com/PyoneerO/qzip/Dockerfile 
+  wget https://raw.githubusercontent.com/PyoneerO/qzip/master/Dockerfile
 - build image: \
   docker build -t qzip . 
 - create q-zip container: \
@@ -63,7 +63,7 @@ wget https://raw.githubusercontent.com/PyoneerO/qzip/master/q-zip_parameters.txt
 wget https://raw.githubusercontent.com/PyoneerO/qzip/master/q-zip_commands.sh
 ### you do not want to spend too much time with setting up the environment (but you have docker installed)?
 - get the Dockerfile: \
-  wget https://github.com/PyoneerO/qzip/Dockerfile
+  wget https://raw.githubusercontent.com/PyoneerO/qzip/master/Dockerfile
 - create a qzip docker image: \
   docker build -t qzip .
 - run a qzip docker container: \
