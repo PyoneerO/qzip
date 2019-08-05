@@ -56,7 +56,7 @@ Please have available the following tools. The brackets indicate the used and te
 - mothur (1.40.5)
 - GNU parallel (20141022)
 
-## installing:docker run --rm -it qzip /bin/bash
+## installing:
 ### you have all the needed tools available?
 Simply copy q-zip_commands.sh and q-zip_parameters.txt into your working directory:\
 wget https://raw.githubusercontent.com/PyoneerO/qzip/master/q-zip_parameters.txt \
