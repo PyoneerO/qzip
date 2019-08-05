@@ -3,6 +3,26 @@
 Qzip is a bash script which wraps and connects common bioinformatics tools to produce sample by observation contingency tables from demultiplexed Illumina paired-end amplicon sequences.
 The usage of GNU parallel for most parallelizable processing steps and the usage of Swarm as fast clustering method makes it extremely speedy. On a 20 core linux system (physical cores) the processing of about 300 million sequences from a large scale project only takes ~ 6 h and the processing of 10 million sequences from a handy-sized project only takes a few minutes.
 
+## Fast start
+- get dockerfile: \
+  wget https://github.com/PyoneerO/qzip/dockerfile \
+- build image: \
+  docker build -t qzip . \
+- create q-zip container: \
+  docker run --rm -it qzip /bin/bash \
+- clone q-zip repo locally: \
+  git clone https://github.com/PyoneerO/qzip \
+- copy pipeline files into test directory: \
+  cp $PWD/qzip/scripts/q-zip_* $PWD/qzip/test/run \
+- softlink test raw fastq files into the test directory: \
+  for i in $PWD/qzip/test/raw_data_repo/M03457_00*/*fastq.gz; do ln -s $i $PWD"/qzip/test/run/"$(basename $(dirname $i))"_"$(basename $i); done \
+- extract reference set: \
+  tar xfvz $PWD/qzip/test/references/pr2_version_4_11_1_mothur.tar.gz --directory $PWD/qzip/test/references/ \
+- enter test directory: \
+  cd $PWD/qzip/test/run \
+- source q-zip script to execute the pipeline: \
+  . ./q-zip_commands.sh
+
 ## features
 - easy to install and use
 - based on open source tools
@@ -36,10 +56,19 @@ Please have available the following tools. The brackets indicate the used and te
 - mothur (1.40.5)
 - GNU parallel (20141022)
 
-## installing:
-copy q-zip_commands.sh and q-zip_parameters.txt into your working directory:\
+## installing:docker run --rm -it qzip /bin/bash
+### you have all the needed tools available?
+Simply copy q-zip_commands.sh and q-zip_parameters.txt into your working directory:\
 wget https://raw.githubusercontent.com/PyoneerO/qzip/master/q-zip_parameters.txt \
 wget https://raw.githubusercontent.com/PyoneerO/qzip/master/q-zip_commands.sh
+### you do not want to spend too much time with setting up the environment (but you have docker installed)?
+- get the docker file:
+  wget https://github.com/PyoneerO/qzip/dockerfile
+- create a qzip docker image:
+  docker build -t qzip .
+- run a qzip docker container:
+  docker run --rm -it qzip /bin/bash 
+Then enter your working directory and download the q-zip_parameters.txt and q-zip_commands.sh files.
 
 ## input:
 - demultiplexed Miseq paired-end raw data (fastq/fastq.gz) with 
@@ -82,6 +111,21 @@ Please use the same name for taxonomy map and fasta file, except of the filename
 simply source the script:
 
 . ./q-zip_commands.sh
+
+## test environment
+If you just want to test the pipeline: \
+- clone q-zip repo locally: \
+  git clone https://github.com/PyoneerO/qzip \
+- copy pipeline files into test directory: \
+  cp $PWD/qzip/scripts/q-zip_* $PWD/qzip/test/run \
+- softlink test raw fastq files into the test directory: \
+  for i in $PWD/qzip/test/raw_data_repo/M03457_00*/*fastq.gz; do ln -s $i $PWD"/qzip/test/run/"$(basename $(dirname $i))"_"$(basename $i); done \
+- extract reference set: \
+  tar xfvz $PWD/qzip/test/references/pr2_version_4_11_1_mothur.tar.gz --directory $PWD/qzip/test/references/ \
+- enter test directory: \
+  cd $PWD/qzip/test/run \
+- source q-zip script to execute the pipeline: \
+  . ./q-zip_commands.sh
 
 ## output:
 a zip file ProjectName_Date_Time.zip containing the following:
