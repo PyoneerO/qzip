@@ -5,21 +5,21 @@ The usage of GNU parallel for most parallelizable processing steps and the usage
 
 ## Fast start
 - get dockerfile: \
-  wget https://github.com/PyoneerO/qzip/dockerfile \
+  wget https://github.com/PyoneerO/qzip/dockerfile 
 - build image: \
-  docker build -t qzip . \
+  docker build -t qzip . 
 - create q-zip container: \
-  docker run --rm -it qzip /bin/bash \
+  docker run --rm -it qzip /bin/bash 
 - clone q-zip repo locally: \
-  git clone https://github.com/PyoneerO/qzip \
+  git clone https://github.com/PyoneerO/qzip 
 - copy pipeline files into test directory: \
-  cp $PWD/qzip/scripts/q-zip_* $PWD/qzip/test/run \
+  cp $PWD/qzip/scripts/q-zip_* $PWD/qzip/test/run 
 - softlink test raw fastq files into the test directory: \
-  for i in $PWD/qzip/test/raw_data_repo/M03457_00*/*fastq.gz; do ln -s $i $PWD"/qzip/test/run/"$(basename $(dirname $i))"_"$(basename $i); done \
+  for i in $PWD/qzip/test/raw_data_repo/M03457_00*/*fastq.gz; do ln -s $i $PWD"/qzip/test/run/"$(basename $(dirname $i))"_"$(basename $i); done 
 - extract reference set: \
-  tar xfvz $PWD/qzip/test/references/pr2_version_4_11_1_mothur.tar.gz --directory $PWD/qzip/test/references/ \
+  tar xfvz $PWD/qzip/test/references/pr2_version_4_11_1_mothur.tar.gz --directory $PWD/qzip/test/references/ 
 - enter test directory: \
-  cd $PWD/qzip/test/run \
+  cd $PWD/qzip/test/run 
 - source q-zip script to execute the pipeline: \
   . ./q-zip_commands.sh
 
@@ -115,15 +115,15 @@ simply source the script:
 ## test environment
 If you just want to test the pipeline: \
 - clone q-zip repo locally: \
-  git clone https://github.com/PyoneerO/qzip \
+  git clone https://github.com/PyoneerO/qzip 
 - copy pipeline files into test directory: \
-  cp $PWD/qzip/scripts/q-zip_* $PWD/qzip/test/run \
+  cp $PWD/qzip/scripts/q-zip_* $PWD/qzip/test/run 
 - softlink test raw fastq files into the test directory: \
-  for i in $PWD/qzip/test/raw_data_repo/M03457_00*/*fastq.gz; do ln -s $i $PWD"/qzip/test/run/"$(basename $(dirname $i))"_"$(basename $i); done \
+  for i in $PWD/qzip/test/raw_data_repo/M03457_00*/*fastq.gz; do ln -s $i $PWD"/qzip/test/run/"$(basename $(dirname $i))"_"$(basename $i); done 
 - extract reference set: \
-  tar xfvz $PWD/qzip/test/references/pr2_version_4_11_1_mothur.tar.gz --directory $PWD/qzip/test/references/ \
+  tar xfvz $PWD/qzip/test/references/pr2_version_4_11_1_mothur.tar.gz --directory $PWD/qzip/test/references/ 
 - enter test directory: \
-  cd $PWD/qzip/test/run \
+  cd $PWD/qzip/test/run 
 - source q-zip script to execute the pipeline: \
   . ./q-zip_commands.sh
 
