@@ -62,12 +62,12 @@ Simply copy q-zip_commands.sh and q-zip_parameters.txt into your working directo
 wget https://raw.githubusercontent.com/PyoneerO/qzip/master/q-zip_parameters.txt \
 wget https://raw.githubusercontent.com/PyoneerO/qzip/master/q-zip_commands.sh
 ### you do not want to spend too much time with setting up the environment (but you have docker installed)?
-- get the docker file:
+- get the docker file: \
   wget https://github.com/PyoneerO/qzip/dockerfile
-- create a qzip docker image:
+- create a qzip docker image: \
   docker build -t qzip .
-- run a qzip docker container:
-  docker run --rm -it qzip /bin/bash 
+- run a qzip docker container: \
+  docker run --rm -it qzip /bin/bash \
 Then enter your working directory and download the q-zip_parameters.txt and q-zip_commands.sh files.
 
 ## input:
