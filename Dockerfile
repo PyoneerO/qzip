@@ -1,6 +1,6 @@
 FROM ubuntu:16.04
 
-LABEL maintainer="stefan.neuhaus@awi.de"
+LABEL maintainer="stefan dot neuhaus at awi dot de"
 LABEL description="https://github.com/PyoneerO/qzip/blob/master/README.MD"
 
 #install needed packages from apt repos
