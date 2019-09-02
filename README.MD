@@ -68,7 +68,7 @@ wget https://raw.githubusercontent.com/PyoneerO/qzip/master/q-zip_commands.sh
   docker build -t qzip .
 - run a qzip container: \
   docker run --rm -it qzip /bin/bash \
-Then enter your working directory and download the q-zip_parameters.txt and q-zip_commands.sh files.
+Then create a working directory, enter it, copy/download reference set and raw fastq files and download the q-zip_parameters.txt and q-zip_commands.sh files.
 
 ## input:
 - demultiplexed Miseq paired-end raw data (fastq/fastq.gz) with 
@@ -143,6 +143,6 @@ a zip file ProjectName_Date_Time.zip containing the following:
 - ProjectID_sample_metadata.map - sample metadata
 - ProjectID_OTU_table_full_json_clean.biom - OTU table as biom, json format, all provided metadata included
 - ProjectID_OTU_table_full_hdf5_clean.biom - OTU table as biom, hdf5 format, all provided metadata included
-- ProjectID_OTU_table_pure_clean.csv - OTU table + taxonomie as csv
-- ProjectID_OTU_table_pure_clean_full.csv - OTU table + taxonomie + sequence as csv
+- ProjectID_OTU_table_pure_clean.csv - OTU table + taxonomy as csv
+- ProjectID_OTU_table_pure_clean_full.csv - OTU table + taxonomy + sequence as csv
 
